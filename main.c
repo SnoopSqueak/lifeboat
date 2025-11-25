@@ -6,7 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define MAX_INPUT_LENGTH 4
+#define MAX_INPUT_LENGTH 2048
 #define MIN_INPUT_LENGTH 2
 
 void read_user_input (char* user_input) {
@@ -28,7 +28,7 @@ void read_user_input (char* user_input) {
 
 int main (int argc, char **argv) {
 	char user_input[MAX_INPUT_LENGTH];
-	char *output_file_path;
+	char *output_file_path = NULL;
 	int argi;
 	opterr = 0;
 	while ((argi = getopt (argc, argv, "o:")) != -1) {
@@ -38,7 +38,7 @@ int main (int argc, char **argv) {
 			break;
 			case '?':
 				if (optopt == 'o') {
-					fprintf(stderr, "Option -%o requires an argument.\n", optopt);
+					fprintf(stderr, "Option -%c requires an argument.\n", optopt);
 				} else {
 					fprintf(stderr, "Unknown option.\n");
 				}
@@ -46,7 +46,7 @@ int main (int argc, char **argv) {
 			default: abort();
 		}
 	}
-	if (output_file_path) {
+	if (output_file_path != NULL) {
 		printf("Redirecting output to %s...\n", output_file_path);
 		if (freopen(output_file_path, "w", stdout) == NULL) {
 			printf("Failed to open %s for writing.\n", user_input);
