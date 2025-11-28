@@ -2,11 +2,13 @@
 // https://snoopsqueak.com
 
 #include <errno.h>
-#include <sys/socket.h>
+#include <netinet/in.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <unistd.h>
 
 #define MAX_INPUT_LENGTH 2048
@@ -18,8 +20,36 @@
 
 #define DEFAULT_PORT 25252
 
-//const char * SOFTWARE_NAME = "LifeBoat";
+#define ANSI_COLOR_BLACK "\x1b[30m"
+#define ANSI_COLOR_RED "\x1b[31m"
+#define ANSI_COLOR_GREEN "\x1b[32m"
+#define ANSI_COLOR_YELLOW "\x1b[33m"
+#define ANSI_COLOR_BLUE "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN "\x1b[36m"
+#define ANSI_COLOR_WHITE "\x1b[37m"
+#define ANSI_COLOR_BRIGHT_BLACK "\x1b[90m"
+#define ANSI_COLOR_BRIGHT_RED "\x1b[91m"
+#define ANSI_COLOR_BRIGHT_GREEN "\x1b[92m"
+#define ANSI_COLOR_BRIGHT_YELLOW "\x1b[93m"
+#define ANSI_COLOR_BRIGHT_BLUE "\x1b[94m"
+#define ANSI_COLOR_BRIGHT_MAGENTA "\x1b[95m"
+#define ANSI_COLOR_BRIGHT_CYAN "\x1b[96m"
+#define ANSI_COLOR_BRIGHT_WHITE "\x1b[97m"
+#define ANSI_COLOR_RESET "\x1b[0m"
+
+#define ALWAYS 0
+#define TRACE 1
+#define DEBUG 2
+#define INFO 3
+#define WARN 4
+#define ERROR 5
+#define NEVER 6
+
+int log_level = ALWAYS;
+
 int connections_batch_index = 0;
+char * socket_path = "./sockets/";
 
 typedef struct {
 	char * command;
@@ -32,8 +62,28 @@ typedef struct {
 	int sockfd;
 } Connection;
 
+void log_this (char * message, int message_log_level, ...) {
+	if (message_log_level < NEVER && log_level <= message_log_level) {
+		va_list args;
+		va_start(args, message_log_level);
+		char * color;
+		switch (message_log_level) {
+			case ALWAYS: color = ANSI_COLOR_BRIGHT_WHITE; break;
+			case TRACE: color = ANSI_COLOR_BRIGHT_BLACK; break;
+			case DEBUG: color = ANSI_COLOR_BRIGHT_BLACK; break;
+			case INFO: color = ANSI_COLOR_BRIGHT_WHITE; break;
+			case WARN: color = ANSI_COLOR_BRIGHT_YELLOW; break;
+			case ERROR: color = ANSI_COLOR_BRIGHT_RED; break;
+		}
+		printf(color);
+		vprintf(message, args);
+		printf(ANSI_COLOR_RESET);
+		va_end(args);
+	}
+}
+
 int handle_quit (char ** argv) {
-	printf("Exiting program.\n");
+	log_this("Exiting program.\n", DEBUG);
 	return 1;
 }
 
@@ -51,20 +101,20 @@ Connection connections[CONNECTIONS_BATCH_LENGTH];
 int next_connection_index = 0;
 
 int handle_help (char ** argv) {
-	printf("Available commands:\n");
+	log_this("Available commands:\n", INFO);
 	int commands_length = sizeof(commands)/sizeof(commands[0]);
 	for (int i = 0; i < commands_length; i++) {
 		Command command = commands[i];
-		printf("  %s  %s\n", command.command, command.about);
+		log_this("  %s  %s\n", INFO, command.command, command.about);
 	}
 	return 0;
 }
 
 int make_connection (char * address) {
-	printf("Attempting to connect to %s...\n", address);
+	log_this("Attempting to connect to %s...\n", DEBUG, address);
 	int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_fd == -1) {
-		printf("Failed to open the socket: %i", errno);
+		log_this("Failed to open the socket: %i", WARN, errno);
 		return 0;
 	}
 	Connection connection = {address, socket_fd};
@@ -74,7 +124,15 @@ int make_connection (char * address) {
 	//if (((1 + connections_batch_index) * CONNECTIONS_BATCH_LENGTH) <= next_connection_index) {
 		//connections_batch_index += 1;
 	//}
-	printf("Connected! Socket fd is %i.\n", socket_fd);
+	struct sockaddr_in server_address;
+	server_address.sin_family = AF_INET;
+	server_address.sin_port = htons(DEFAULT_PORT); // TODO: use user-provided port
+	server_address.sin_addr.s_addr = htonl(INADDR_ANY);
+	if (bind(socket_fd, (struct sockaddr *) &server_address, sizeof(server_address)) == -1) {
+		log_this("Failed to bind the socket: %i", WARN, errno);
+		return 0;
+	}
+	log_this("Connected! Socket fd is %i.\n", DEBUG, socket_fd);
 	return 0;
 }
 
@@ -89,7 +147,7 @@ int read_user_input (char * user_input) {
 	// Final character is expected to be newline
 	int input_length = strlen(user_input);
 	if (input_length < MIN_INPUT_LENGTH) {
-		printf("Input rejected, failed to meet length requirements. Got %d, needed at least %d.\n", input_length - 1, MIN_INPUT_LENGTH - 1);
+		log_this("Input rejected, failed to meet length requirements. Got %d, needed at least %d.\n", WARN, input_length - 1, MIN_INPUT_LENGTH - 1);
 	} else {
 		int last_index = input_length - 1;
 		if (user_input[last_index] == '\n') {
@@ -110,13 +168,13 @@ int read_user_input (char * user_input) {
 						return known_command.handler(argv);
 					}
 				}
-				printf("Unrecognized command '%s'. Use /help to see available commands.\n", user_command);
+				log_this("Unrecognized command '%s'. Use /help to see available commands.\n", WARN, user_command);
 			} else {
 				// send message to open channel(s)?
-				printf("Thank you for entering '%s'.\n", user_input);
+				log_this("Thank you for entering '%s'.\n", INFO, user_input);
 			}
 		} else {
-			printf("Input rejected, exceeded length limit. Maximum acceptable input length is %i characters.\n", MAX_INPUT_LENGTH - 1);
+			log_this("Input rejected, exceeded length limit. Maximum acceptable input length is %i characters.\n", WARN, MAX_INPUT_LENGTH - 1);
 		}
 	}
 	return 0;
@@ -139,28 +197,29 @@ int main (int argc, char ** argv) {
 			break;
 			case '?':
 				if (optopt == 'o' || optopt == 'p') {
-					fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+					log_this("Option -%c requires an argument.\n", WARN, optopt);
 				} else {
-					fprintf(stderr, "Unknown option.\n");
+					log_this("Unknown option -%c.\n", WARN, optopt);
 				}
 			break;
 			default: abort();
 		}
 	}
 	if (output_file_path != NULL) {
-		printf("Redirecting output to %s...\n", output_file_path);
+		log_this("Redirecting output to %s...\n", DEBUG, output_file_path);
 		if (freopen(output_file_path, "w", stdout) == NULL) {
-			printf("Failed to open %s for writing.\n", user_input);
+			log_this("Failed to open %s for writing.\n", ERROR, user_input);
+			return EXIT_FAILURE;
 		}
 	} else {
-		printf("No output redirection detected. Printing to console.\n");
+		log_this("No output redirection detected. Printing to console.\n", DEBUG);
 	}
 	if (input_port != NULL) {
 		// use given port
 	} else {
 		// use default port
 	}
-	printf("Welcome to your very own %s.\n", SOFTWARE_NAME());
+	log_this("Welcome to your very own %s.\n", INFO, SOFTWARE_NAME());
 	handle_help(NULL);
 	while(1 == 1) {
 		user_input_return = read_user_input(user_input);
