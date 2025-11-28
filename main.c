@@ -14,8 +14,8 @@
 #define MAX_INPUT_LENGTH 2048
 #define MIN_INPUT_LENGTH 2
 #define MAX_PARAMS_LENGTH 32
-#define MAX_CONNECTIONS 128
-#define CONNECTIONS_BATCH_LENGTH 8
+#define MAX_INCOMING_CONNECTIONS 64
+#define MAX_OUTGOING_CONNECTIONS 64
 #define SOFTWARE_NAME(n) "LifeBoat"
 
 #define DEFAULT_PORT 25252
@@ -38,15 +38,16 @@
 #define ANSI_COLOR_BRIGHT_WHITE "\x1b[97m"
 #define ANSI_COLOR_RESET "\x1b[0m"
 
-#define ALWAYS 0
+#define NEVER 0
 #define TRACE 1
 #define DEBUG 2
 #define INFO 3
 #define WARN 4
 #define ERROR 5
-#define NEVER 6
+#define ALWAYS 6
 
-int log_level = ALWAYS;
+int log_level = NEVER;
+int outgoing_port = DEFAULT_PORT;
 
 int connections_batch_index = 0;
 char * socket_path = "./sockets/";
@@ -63,7 +64,7 @@ typedef struct {
 } Connection;
 
 void log_this (char * message, int message_log_level, ...) {
-	if (message_log_level < NEVER && log_level <= message_log_level) {
+	if (message_log_level > NEVER && log_level <= message_log_level) {
 		va_list args;
 		va_start(args, message_log_level);
 		char * color;
@@ -111,19 +112,12 @@ int handle_help (char ** argv) {
 }
 
 int make_connection (char * address) {
-	log_this("Attempting to connect to %s...\n", DEBUG, address);
+	log_this("Attempting to connect to %s:%i...\n", DEBUG, address, outgoing_port);
 	int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_fd == -1) {
 		log_this("Failed to open the socket: %i", WARN, errno);
 		return 0;
 	}
-	Connection connection = {address, socket_fd};
-	connections[next_connection_index] = connection;
-	next_connection_index += 1;
-	// TODO: resize connections array when too many connected
-	//if (((1 + connections_batch_index) * CONNECTIONS_BATCH_LENGTH) <= next_connection_index) {
-		//connections_batch_index += 1;
-	//}
 	struct sockaddr_in server_address;
 	server_address.sin_family = AF_INET;
 	server_address.sin_port = htons(DEFAULT_PORT); // TODO: use user-provided port
@@ -132,6 +126,9 @@ int make_connection (char * address) {
 		log_this("Failed to bind the socket: %i", WARN, errno);
 		return 0;
 	}
+	Connection connection = {address, socket_fd};
+	connections[next_connection_index] = connection;
+	next_connection_index += 1;
 	log_this("Connected! Socket fd is %i.\n", DEBUG, socket_fd);
 	return 0;
 }
@@ -175,6 +172,11 @@ int read_user_input (char * user_input) {
 			}
 		} else {
 			log_this("Input rejected, exceeded length limit. Maximum acceptable input length is %i characters.\n", WARN, MAX_INPUT_LENGTH - 1);
+			while (user_input[last_index] != '\n') {
+				fgets(user_input, MAX_INPUT_LENGTH, stdin);
+				input_length = strlen(user_input);
+				last_index = input_length - 1;
+			};
 		}
 	}
 	return 0;
@@ -187,7 +189,7 @@ int main (int argc, char ** argv) {
 	int argi;
 	int user_input_return;
 	opterr = 0;
-	while ((argi = getopt (argc, argv, "o:")) != -1) {
+	while ((argi = getopt (argc, argv, "o:p:")) != -1) {
 		switch (argi) {
 			case 'p':
 				input_port = optarg;
@@ -215,9 +217,16 @@ int main (int argc, char ** argv) {
 		log_this("No output redirection detected. Printing to console.\n", DEBUG);
 	}
 	if (input_port != NULL) {
-		// use given port
+		outgoing_port = strtol(input_port, NULL, 10);
+		if (outgoing_port > 0 && outgoing_port <= 65535) {
+			log_this("Custom port provided, will use %i.\n", DEBUG, outgoing_port);
+		} else {
+			outgoing_port = DEFAULT_PORT;
+			log_this("Custom port \"%s\" was supplied, but could not be parsed. Using default port %i instead.\n", WARN, input_port, outgoing_port);
+		}
 	} else {
-		// use default port
+		outgoing_port = DEFAULT_PORT;
+		log_this("No custom port provided, will use default value %i.\n", DEBUG, outgoing_port);
 	}
 	log_this("Welcome to your very own %s.\n", INFO, SOFTWARE_NAME());
 	handle_help(NULL);
