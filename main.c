@@ -90,15 +90,18 @@ int handle_quit (char ** argv) {
 
 int handle_help(char ** argv);
 
-int handle_connect(char ** argv);
+int handle_join(char ** argv);
+
+int handle_host(char ** argv);
 
 Command commands[] = {
 	{"/help", "List available commands.", handle_help},
 	{"/quit", "Exit this program.", handle_quit},
-	{"/connect", "Connect to another " SOFTWARE_NAME() ".", handle_connect}
+	{"/host", "Open your " SOFTWARE_NAME() " for others to join the lobby.", handle_host},
+	{"/join", "Connect to another " SOFTWARE_NAME() ".", handle_join}
 };
 
-Connection connections[CONNECTIONS_BATCH_LENGTH];
+//Connection connections[CONNECTIONS_BATCH_LENGTH];
 int next_connection_index = 0;
 
 int handle_help (char ** argv) {
@@ -111,8 +114,15 @@ int handle_help (char ** argv) {
 	return 0;
 }
 
-int make_connection (char * address) {
-	log_this("Attempting to connect to %s:%i...\n", DEBUG, address, outgoing_port);
+int handle_join (char ** argv) {
+	char * address = argv[0];
+	log_this("Attempting to connect to %s...\n", DEBUG, address);
+	log_this("Join feature has not yet been implemented.\n", WARN);
+	return 0;
+}
+
+int handle_host (char ** argv) {
+	log_this("Opening INADDR_ANY on port %i...\n", DEBUG, outgoing_port);
 	int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_fd == -1) {
 		log_this("Failed to open the socket: %i", WARN, errno);
@@ -120,22 +130,14 @@ int make_connection (char * address) {
 	}
 	struct sockaddr_in server_address;
 	server_address.sin_family = AF_INET;
-	server_address.sin_port = htons(DEFAULT_PORT); // TODO: use user-provided port
+	server_address.sin_port = htons(outgoing_port);
 	server_address.sin_addr.s_addr = htonl(INADDR_ANY);
 	if (bind(socket_fd, (struct sockaddr *) &server_address, sizeof(server_address)) == -1) {
 		log_this("Failed to bind the socket: %i", WARN, errno);
 		return 0;
 	}
-	Connection connection = {address, socket_fd};
-	connections[next_connection_index] = connection;
-	next_connection_index += 1;
-	log_this("Connected! Socket fd is %i.\n", DEBUG, socket_fd);
-	return 0;
-}
-
-int handle_connect (char ** argv) {
-	char * address = argv[0];
-	make_connection(address);
+	log_this("Bound socket %i to port %i.\n", DEBUG, socket_fd, outgoing_port);
+	log_this("Hosting feature not yet implemented.\n", WARN);
 	return 0;
 }
 
