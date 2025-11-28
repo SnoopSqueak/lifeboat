@@ -63,6 +63,8 @@ typedef struct {
 	int sockfd;
 } Connection;
 
+Connection host_connection = {"127.0.0.1", -1};
+
 void log_this (char * message, int message_log_level, ...) {
 	if (message_log_level > NEVER && log_level <= message_log_level) {
 		va_list args;
@@ -94,11 +96,20 @@ int handle_join(char ** argv);
 
 int handle_host(char ** argv);
 
+int handle_end_host(char ** argv);
+
+int handle_end_join(char ** argv);
+
+int handle_close(char ** argv);
+
 Command commands[] = {
 	{"/help", "List available commands.", handle_help},
 	{"/quit", "Exit this program.", handle_quit},
 	{"/host", "Open your " SOFTWARE_NAME() " for others to join the lobby.", handle_host},
-	{"/join", "Connect to another " SOFTWARE_NAME() ".", handle_join}
+	{"/join", "Connect to another " SOFTWARE_NAME() ".", handle_join},
+	{"/endhost", "Close all client connections from other " SOFTWARE_NAME() "s to yours and stop listening for them.", handle_end_host},
+	{"/endjoin", "Disconnect from one or more " SOFTWARE_NAME() "s.", handle_end_join},
+	{"/close", "Close all open connections.", handle_close}
 };
 
 //Connection connections[CONNECTIONS_BATCH_LENGTH];
@@ -125,7 +136,7 @@ int handle_host (char ** argv) {
 	log_this("Opening INADDR_ANY on port %i...\n", DEBUG, outgoing_port);
 	int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_fd == -1) {
-		log_this("Failed to open the socket: %i", WARN, errno);
+		log_this("Failed to open the socket: %s\n", WARN, strerror(errno));
 		return 0;
 	}
 	struct sockaddr_in server_address;
@@ -133,11 +144,41 @@ int handle_host (char ** argv) {
 	server_address.sin_port = htons(outgoing_port);
 	server_address.sin_addr.s_addr = htonl(INADDR_ANY);
 	if (bind(socket_fd, (struct sockaddr *) &server_address, sizeof(server_address)) == -1) {
-		log_this("Failed to bind the socket: %i", WARN, errno);
+		log_this("Failed to bind the socket: %s\n", WARN, strerror(errno));
 		return 0;
 	}
 	log_this("Bound socket %i to port %i.\n", DEBUG, socket_fd, outgoing_port);
-	log_this("Hosting feature not yet implemented.\n", WARN);
+	if (listen(socket_fd, MAX_INCOMING_CONNECTIONS) == -1) {
+		log_this("Failed to listen for connections: %s\n", WARN, strerror(errno));
+		return 0;
+	}
+	host_connection.sockfd = socket_fd;
+	log_this("Listening for connections on port %i.\n", INFO, outgoing_port);
+	return 0;
+}
+
+int handle_end_host (char ** argv) {
+	if (host_connection.sockfd != -1) {
+		if (close(host_connection.sockfd) != -1) {
+			log_this("Closed connection to socket %i.\n", DEBUG, host_connection.sockfd);
+			host_connection.sockfd = -1;
+		} else {
+			log_this("Error closing connection: %s\n", ERROR, strerror(errno));
+			return 1;
+		}
+	}
+	log_this("Done hosting.\n", INFO);
+	return 0;
+}
+
+int handle_end_join (char ** argv) {
+	log_this("/endjoin not yet implemented. But neither is /join, so meh.\n", WARN);
+	return 0;
+}
+
+int handle_close (char ** argv) {
+	handle_end_host(argv);
+	handle_end_join(argv);
 	return 0;
 }
 
