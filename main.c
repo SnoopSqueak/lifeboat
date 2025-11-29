@@ -183,6 +183,7 @@ int handle_close (char ** argv) {
 }
 
 int read_user_input (char * user_input) {
+	// TODO: instead of fgets, use select with a timeout?
 	fgets(user_input, MAX_INPUT_LENGTH, stdin);
 	// Final character is expected to be newline
 	int input_length = strlen(user_input);
