@@ -47,7 +47,6 @@
 #define ALWAYS 6
 
 int log_level = NEVER;
-int outgoing_port = DEFAULT_PORT;
 
 int connections_batch_index = 0;
 char * socket_path = "./sockets/";
@@ -63,7 +62,8 @@ typedef struct {
 	int sockfd;
 } Connection;
 
-Connection host_connection = {"127.0.0.1", -1};
+Connection host_connections[MAX_OUTGOING_CONNECTIONS];
+Connection client_connections[MAX_INCOMING_CONNECTIONS];
 
 void log_this (char * message, int message_log_level, ...) {
 	if (message_log_level > NEVER && log_level <= message_log_level) {
@@ -102,18 +102,48 @@ int handle_end_join(char ** argv);
 
 int handle_close(char ** argv);
 
+int make_connection(int socket_fd, struct sockaddr_in addr_info, Connection connections_list[]);
+
+int handle_dev(char ** argv);
+
 Command commands[] = {
 	{"/help", "List available commands.", handle_help},
 	{"/quit", "Exit this program.", handle_quit},
-	{"/host", "Open your " SOFTWARE_NAME() " for others to join the lobby.", handle_host},
-	{"/join", "Connect to another " SOFTWARE_NAME() ".", handle_join},
-	{"/endhost", "Close all client connections from other " SOFTWARE_NAME() "s to yours and stop listening for them.", handle_end_host},
-	{"/endjoin", "Disconnect from one or more " SOFTWARE_NAME() "s.", handle_end_join},
-	{"/close", "Close all open connections.", handle_close}
+	{"/host", "[port]  Open your " SOFTWARE_NAME() " for others to join the lobby on port [port].", handle_host},
+	{"/join", "[address]  Connect to another " SOFTWARE_NAME() " that is hosting at [address].", handle_join},
+	{"/close", "[connection_number]  Close all open connections.", handle_close},
+	{"/say", "[connection_number]  Send a message through the given channel(s).", handle_close},
+	{"/dev", "(Scrap function for debug and development.)", handle_dev}
 };
 
-//Connection connections[CONNECTIONS_BATCH_LENGTH];
-int next_connection_index = 0;
+int make_connection (int socket_fd, struct sockaddr_in addr_info, Connection connections_list[]) {
+	int i = 0;
+	int length = sizeof(&connections_list)/sizeof(Connection);
+	log_this("Found %i connections.\n", TRACE, length);
+	Connection existing;
+	while (i < length) {
+		existing = connections_list[i];
+		if (existing.sockfd == socket_fd) {
+			log_this("Given socket %i already exists as a known connection.\n", WARN, socket_fd);
+			return -1;
+		}
+		i++;
+	}
+	if (i < length - 1) {
+		getsockname(socket_fd, addr_info, 24);
+		log_this("Socket address: %s\n", DEBUG, socket_address);
+		connections_list[i] = Connection(socket_fd);
+	}
+	return 0;
+}
+
+int handle_dev(char ** argv) {
+	char * port[0];
+	handle_host(port);
+	//make_connection(3, host_connections);
+	log_this("Done?\n", DEBUG);
+	return 0;
+}
 
 int handle_help (char ** argv) {
 	log_this("Available commands:\n", INFO);
@@ -133,6 +163,11 @@ int handle_join (char ** argv) {
 }
 
 int handle_host (char ** argv) {
+	char * port_string = argv[0];
+	int outgoing_port = DEFAULT_PORT;
+	if (port_string != NULL && strlen(port_string) > 0) {
+		outgoing_port = strtol(port_string, NULL, 10);
+	}
 	log_this("Opening INADDR_ANY on port %i...\n", DEBUG, outgoing_port);
 	int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_fd == -1) {
@@ -152,13 +187,15 @@ int handle_host (char ** argv) {
 		log_this("Failed to listen for connections: %s\n", WARN, strerror(errno));
 		return 0;
 	}
-	host_connection.sockfd = socket_fd;
+	//if available:
+	make_connection(sockfd, server_address.sock_addr, host_connections);
+	//else, close socket, error and return.
 	log_this("Listening for connections on port %i.\n", INFO, outgoing_port);
 	return 0;
 }
 
 int handle_end_host (char ** argv) {
-	if (host_connection.sockfd != -1) {
+	/*if (host_connection.sockfd != -1) {
 		if (close(host_connection.sockfd) != -1) {
 			log_this("Closed connection to socket %i.\n", DEBUG, host_connection.sockfd);
 			host_connection.sockfd = -1;
@@ -166,8 +203,8 @@ int handle_end_host (char ** argv) {
 			log_this("Error closing connection: %s\n", ERROR, strerror(errno));
 			return 1;
 		}
-	}
-	log_this("Done hosting.\n", INFO);
+		log_this("Done hosting.\n", INFO);
+	}*/
 	return 0;
 }
 
@@ -180,6 +217,14 @@ int handle_close (char ** argv) {
 	handle_end_host(argv);
 	handle_end_join(argv);
 	return 0;
+}
+
+void cleanup_before_exit () {
+	log_this(ANSI_COLOR_RESET, ALWAYS);
+}
+
+void handle_term_signal (int sigint) {
+	cleanup_before_exit();
 }
 
 int read_user_input (char * user_input) {
@@ -228,50 +273,7 @@ int read_user_input (char * user_input) {
 
 int main (int argc, char ** argv) {
 	char user_input[MAX_INPUT_LENGTH];
-	char * output_file_path = NULL;
-	char * input_port = NULL;
-	int argi;
 	int user_input_return;
-	opterr = 0;
-	while ((argi = getopt (argc, argv, "o:p:")) != -1) {
-		switch (argi) {
-			case 'p':
-				input_port = optarg;
-			break;
-			case 'o':
-				output_file_path = optarg;
-			break;
-			case '?':
-				if (optopt == 'o' || optopt == 'p') {
-					log_this("Option -%c requires an argument.\n", WARN, optopt);
-				} else {
-					log_this("Unknown option -%c.\n", WARN, optopt);
-				}
-			break;
-			default: abort();
-		}
-	}
-	if (output_file_path != NULL) {
-		log_this("Redirecting output to %s...\n", DEBUG, output_file_path);
-		if (freopen(output_file_path, "w", stdout) == NULL) {
-			log_this("Failed to open %s for writing.\n", ERROR, user_input);
-			return EXIT_FAILURE;
-		}
-	} else {
-		log_this("No output redirection detected. Printing to console.\n", DEBUG);
-	}
-	if (input_port != NULL) {
-		outgoing_port = strtol(input_port, NULL, 10);
-		if (outgoing_port > 0 && outgoing_port <= 65535) {
-			log_this("Custom port provided, will use %i.\n", DEBUG, outgoing_port);
-		} else {
-			outgoing_port = DEFAULT_PORT;
-			log_this("Custom port \"%s\" was supplied, but could not be parsed. Using default port %i instead.\n", WARN, input_port, outgoing_port);
-		}
-	} else {
-		outgoing_port = DEFAULT_PORT;
-		log_this("No custom port provided, will use default value %i.\n", DEBUG, outgoing_port);
-	}
 	log_this("Welcome to your very own %s.\n", INFO, SOFTWARE_NAME());
 	handle_help(NULL);
 	while(1 == 1) {
