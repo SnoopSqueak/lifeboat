@@ -15,12 +15,11 @@
 #define MIN_INPUT_LENGTH 2
 #define MAX_PARAMS_LENGTH 32
 #define MAX_INCOMING_CONNECTIONS 64
-#define MAX_OUTGOING_CONNECTIONS 64
-#define SOFTWARE_NAME(n) "LifeBoat"
+//#define MAX_OUTGOING_CONNECTIONS 64
+#define MAX_OUTGOING_CONNECTIONS 4
+#define SOFTWARE_NAME "LifeBoat"
 
 #define DEFAULT_PORT 25252
-
-#define SOCKADDR_IN_INITIALIZER {-1, -1, {-1}}
 
 #define ANSI_COLOR_BLACK "\x1b[30m"
 #define ANSI_COLOR_RED "\x1b[31m"
@@ -61,7 +60,7 @@ typedef struct {
 typedef struct Connection {
 	struct sockaddr_in addr;
 	ssize_t socket_fd;
-	size_t id;
+	ssize_t id;
 } Connection;
 
 typedef struct ConnectionList {
@@ -79,7 +78,7 @@ void log_this (char * message, int message_log_level, ...) {
 		char * color;
 		switch (message_log_level) {
 			case ALWAYS: color = ANSI_COLOR_BRIGHT_WHITE; break;
-			case TRACE: color = ANSI_COLOR_BRIGHT_BLACK; break;
+			case TRACE: color = ANSI_COLOR_BRIGHT_GREEN; break;
 			case DEBUG: color = ANSI_COLOR_BRIGHT_BLACK; break;
 			case INFO: color = ANSI_COLOR_BRIGHT_WHITE; break;
 			case WARN: color = ANSI_COLOR_BRIGHT_YELLOW; break;
@@ -109,39 +108,23 @@ int handle_end_join(char ** argv);
 
 int handle_close(char ** argv);
 
-int make_connection(int socket_fd, in_addr_t address, int port, ConnectionList * connections_list);
+int make_connection(ssize_t socket_fd, in_addr_t address, uint16_t port, ConnectionList * connections_list);
 
 Command commands[] = {
 	{"/help", "List available commands.", handle_help},
 	{"/quit", "Exit this program.", handle_quit},
-	{"/host", "[port]  Open your " SOFTWARE_NAME() " for others to join the lobby on port [port].", handle_host},
-	{"/join", "[address]  Connect to another " SOFTWARE_NAME() " that is hosting at [address].", handle_join},
+	{"/host", "[port]  Open your " SOFTWARE_NAME " for others to join the lobby on port [port].", handle_host},
+	{"/join", "[address]  Connect to another " SOFTWARE_NAME " that is hosting at [address].", handle_join},
 	{"/close", "[connection_number]  Close all open connections.", handle_close},
 	{"/say", "[connection_number]  Send a message through the given channel(s).", handle_close}
 };
 
-size_t get_active_connections (ConnectionList * connections_list, Connection ** results) {
-	size_t i = 0;
-	size_t length = connections_list->length;
-	Connection * existing;
-	size_t count = 0;
-	while (i < length) {
-		existing = &connections_list->head[i];
-		if (existing->id != -1) {
-			if (count == 0) {
-				*results = calloc(1, sizeof(Connection));
-			} else {
-				*results = realloc(*results, (count + 1) * sizeof(Connection));
-			}
-			results[count] = existing;
-			count = count + 1;
-		}
-		i++;
-	}
-	return count;
+void log_connection (Connection * con, int message_log_level) {
+	char * output = "id: %i. socket_fd: %i. address: %u. port: %u.\n";
+	log_this(output, message_log_level, con->id, con->socket_fd, con->addr.sin_addr.s_addr, ntohs(con->addr.sin_port));
 }
 
-int make_connection (int socket_fd, in_addr_t address, int port, ConnectionList * connections_list) {
+int make_connection (ssize_t socket_fd, in_addr_t address, uint16_t port, ConnectionList * connections_list) {
 	size_t i = 0;
 	size_t length = connections_list->length;
 	Connection * existing;
@@ -149,7 +132,6 @@ int make_connection (int socket_fd, in_addr_t address, int port, ConnectionList 
 	while (i < length) {
 		existing = &(connections_list->head[i]);
 		if (first_free == -1 && existing->id == -1) {
-			log_this("Found available connection slot at index %u. Creating connection...\n", TRACE, i);
 			first_free = i;
 		}
 		if (existing->socket_fd == socket_fd) {
@@ -177,17 +159,52 @@ int make_connection (int socket_fd, in_addr_t address, int port, ConnectionList 
 	return first_free;
 }
 
+int close_socket (ssize_t sockfd) {
+	// shuts down the socket
+	shutdown(sockfd, SHUT_RDWR);
+	close(sockfd);
+	log_this("Closed socket %u.\n", DEBUG, sockfd);
+	return 0;
+}
+
+int clear_connection (Connection * con) {
+	ssize_t old_id = con->id;
+	con->addr.sin_family = AF_INET;
+	con->addr.sin_port = 0;
+	con->addr.sin_addr.s_addr = 0;
+	con->socket_fd = -1;
+	con->id = -1;
+	log_this("Cleared connection formerly known as #%i.\n", DEBUG, old_id);
+	return 0;
+}
+
+size_t get_active_connections (ConnectionList * connections_list, Connection * results) {
+	size_t i = 0;
+	size_t length = connections_list->length;
+	Connection * existing;
+	size_t count = 0;
+	while (i < length) {
+		existing = &(connections_list->head[i]);
+		log_connection(existing, TRACE);
+		if (existing->id != -1) {
+			results[count] = connections_list->head[i];
+			count = count + 1;
+		}
+		i++;
+	}
+	return count;
+}
+
 int handle_help (char ** argv) {
-	log_this("displaying help...\n", TRACE);
-	Connection * active_host_sockets = nullptr;
-	size_t con_count = get_active_connections(&host_connections, &active_host_sockets);
+	Connection * active_host_sockets = calloc(host_connections.length, sizeof(Connection));
+	size_t con_count = get_active_connections(&host_connections, active_host_sockets);
 	if (con_count > 0) {
 		log_this("%u active host socket(s):\n  ", INFO, con_count);
 		for (size_t con_i = 0; con_i < con_count; con_i++) {
 			if (con_i > 0) {
 				log_this(", ", INFO);
 			}
-			log_this("%u", INFO, active_host_sockets[con_i].id);
+			log_this("%i %u", INFO, active_host_sockets[con_i].id, ntohs(active_host_sockets[con_i].addr.sin_port));
 		}
 		log_this(".\n", INFO);
 	}
@@ -208,33 +225,38 @@ int handle_join (char ** argv) {
 }
 
 int handle_host (char ** argv) {
-	int outgoing_port = DEFAULT_PORT;
+	uint16_t outgoing_port = DEFAULT_PORT;
 	if (argv != NULL) {
 		char * port_string = argv[0];
 		if (port_string != NULL && strlen(port_string) > 0) {
-			outgoing_port = strtol(port_string, NULL, 10);
+			outgoing_port = strtoul(port_string, NULL, 10);
 		}
 	}
-	log_this("Opening INADDR_ANY on port %i...\n", DEBUG, outgoing_port);
-	int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	log_this("Opening INADDR_ANY on port %u...\n", DEBUG, outgoing_port);
+	ssize_t socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_fd == -1) {
 		log_this("Failed to open the socket: %s\n", WARN, strerror(errno));
-		return -1;
+		return 0;
 	}
-	int con_i = make_connection(socket_fd, INADDR_ANY, outgoing_port, &host_connections);
+	ssize_t con_i = make_connection(socket_fd, INADDR_ANY, outgoing_port, &host_connections);
+	// todo: make connection at con_i available again if error is encountered below
 	if (con_i == -1) {
 		log_this("Failed to instantiate connection: %s\n", ERROR, strerror(errno));
-		return -1;
+		return 0;
 	}
-	Connection * con = &host_connections.head[con_i];
+	Connection * con = &(host_connections.head[con_i]);
 	if (bind(socket_fd, (struct sockaddr *) (&con->addr), sizeof(struct sockaddr)) == -1) {
 		log_this("Failed to bind the socket: %s\n", WARN, strerror(errno));
-		return -1;
+		close_socket(socket_fd);
+		clear_connection(con);
+		return 0;
 	}
 	log_this("Bound socket %i to port %i.\n", DEBUG, socket_fd, outgoing_port);
 	if (listen(socket_fd, MAX_INCOMING_CONNECTIONS) == -1) {
 		log_this("Failed to listen for connections: %s\n", WARN, strerror(errno));
-		return -1;
+		close_socket(socket_fd);
+		clear_connection(con);
+		return 0;
 	}
 	log_this("Listening for connections on port %i.\n", INFO, outgoing_port);
 	return 0;
@@ -306,30 +328,20 @@ int read_user_input (char * user_input) {
 
 int initialize_connections (ConnectionList * connections_list) {
 	size_t length = connections_list->length;
-	connections_list->head = calloc(length, sizeof(Connection));
-	if (connections_list->head == nullptr) {
-		log_this("Error allocating memory for connections list: %s\n", ERROR, strerror(errno));
-		return -1;
-	}
-	Connection * con;
+	connections_list->head = calloc(MAX_OUTGOING_CONNECTIONS, sizeof(Connection));
 	size_t i = 0;
 	while (i < length) {
-		con = &connections_list->head[i];
-		con->socket_fd = -1;
-		con->addr.sin_family = AF_INET;
-		con->addr.sin_port = -1;
-		con->addr.sin_addr.s_addr = -1;
-		con->id = -1;
+		connections_list->head[i] = (struct Connection){(struct sockaddr_in){AF_INET, 0, (struct in_addr){INADDR_ANY}}, -1, -1};
 		i++;
 	}
-	log_this("Initialized %u blank connections.\n", TRACE, i);
+	log_this("Initialized %u blank connections.\n", DEBUG, i);
 	return 0;
 }
 
 int main (int argc, char ** argv) {
 	char user_input[MAX_INPUT_LENGTH];
 	int user_input_return;
-	log_this("Welcome to your %s.\n", INFO, SOFTWARE_NAME());
+	log_this("Welcome to your %s.\n", INFO, SOFTWARE_NAME);
 	if (initialize_connections(&host_connections) != 0) return EXIT_FAILURE;
 	handle_help(NULL);
 	// dev
@@ -343,6 +355,7 @@ int main (int argc, char ** argv) {
 		if (user_input_return != 0) {
 			break;
 		};
+		handle_help(NULL);
 	};
 	fclose(stdout);
 	return EXIT_SUCCESS;
