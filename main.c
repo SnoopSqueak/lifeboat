@@ -1,6 +1,7 @@
 // Mike Stowe 2025
 // https://snoopsqueak.com
 
+#include <ctype.h>
 #include <errno.h>
 #include <netinet/in.h>
 #include <stdarg.h>
@@ -14,7 +15,8 @@
 #define MAX_INPUT_LENGTH 2048
 #define MIN_INPUT_LENGTH 2
 #define MAX_PARAMS_LENGTH 32
-#define MAX_INCOMING_CONNECTIONS 64
+//#define MAX_INCOMING_CONNECTIONS 64
+#define MAX_INCOMING_CONNECTIONS 4
 //#define MAX_OUTGOING_CONNECTIONS 64
 #define MAX_OUTGOING_CONNECTIONS 4
 #define SOFTWARE_NAME "LifeBoat"
@@ -69,7 +71,7 @@ typedef struct ConnectionList {
 } ConnectionList;
 
 ConnectionList host_connections = {MAX_OUTGOING_CONNECTIONS, nullptr};
-//Connection *client_connections[MAX_INCOMING_CONNECTIONS];
+ConnectionList client_connections = {MAX_INCOMING_CONNECTIONS, nullptr};
 
 void log_this (char * message, int message_log_level, ...) {
 	if (message_log_level > NEVER && log_level <= message_log_level) {
@@ -102,21 +104,19 @@ int handle_join(char ** argv);
 
 int handle_host(char ** argv);
 
-int handle_end_host(char ** argv);
-
-int handle_end_join(char ** argv);
-
 int handle_close(char ** argv);
+
+int handle_say(char ** argv);
 
 int make_connection(ssize_t socket_fd, in_addr_t address, uint16_t port, ConnectionList * connections_list);
 
 Command commands[] = {
-	{"/help", "List available commands.", handle_help},
-	{"/quit", "Exit this program.", handle_quit},
+	{"/help", "     List available commands.", handle_help},
+	{"/quit", "     Exit this program.", handle_quit},
 	{"/host", "[port]  Open your " SOFTWARE_NAME " for others to join the lobby on port [port].", handle_host},
 	{"/join", "[address]  Connect to another " SOFTWARE_NAME " that is hosting at [address].", handle_join},
-	{"/close", "[connection_number]  Close all open connections.", handle_close},
-	{"/say", "[connection_number]  Send a message through the given channel(s).", handle_close}
+	{"/close", "[connection id]  Close the connection that matches the given [connection ID]. \"/close all\" to close all connections.", handle_close},
+	{"/say", "[connection id] [message]  Send a [message] through the connection that matches the given [connection ID].", handle_say}
 };
 
 void log_connection (Connection * con, int message_log_level) {
@@ -178,6 +178,41 @@ int clear_connection (Connection * con) {
 	return 0;
 }
 
+int clear_con_close_sock (Connection * con) {
+	close_socket(con->socket_fd);
+	clear_connection(con);
+	return 0;
+}
+
+Connection * get_con_by_id (ssize_t con_id, ConnectionList * connections_list) {
+	size_t i = 0;
+	size_t length = connections_list->length;
+	Connection * existing;
+	while (i < length) {
+		existing = &(connections_list->head[i]);
+		if (existing->id == con_id) {
+			return existing;
+		}
+		i++;
+	}
+	return NULL;
+}
+
+Connection * get_any_con_by_id (ssize_t con_id) {
+	Connection * con = get_con_by_id(con_id, &host_connections);
+	if (con != NULL) {
+		log_this("Found connection %i in host connections list.\n", DEBUG, con_id);
+	} else {
+		con = get_con_by_id(con_id, &client_connections);
+	}
+	if (con != NULL) {
+		log_this("Found connection %i in client connections list.\n", DEBUG, con_id);
+	} else {
+		log_this("Failed to find connection with ID %i.\n", ERROR, con_id);
+	}
+	return con;
+}
+
 size_t get_active_connections (ConnectionList * connections_list, Connection * results) {
 	size_t i = 0;
 	size_t length = connections_list->length;
@@ -185,7 +220,6 @@ size_t get_active_connections (ConnectionList * connections_list, Connection * r
 	size_t count = 0;
 	while (i < length) {
 		existing = &(connections_list->head[i]);
-		log_connection(existing, TRACE);
 		if (existing->id != -1) {
 			results[count] = connections_list->head[i];
 			count = count + 1;
@@ -196,31 +230,54 @@ size_t get_active_connections (ConnectionList * connections_list, Connection * r
 }
 
 int handle_help (char ** argv) {
-	Connection * active_host_sockets = calloc(host_connections.length, sizeof(Connection));
-	size_t con_count = get_active_connections(&host_connections, active_host_sockets);
+	Connection * active_connections = calloc(host_connections.length, sizeof(Connection));
+	size_t con_count = get_active_connections(&host_connections, active_connections);
 	if (con_count > 0) {
 		log_this("%u active host socket(s):\n  ", INFO, con_count);
 		for (size_t con_i = 0; con_i < con_count; con_i++) {
 			if (con_i > 0) {
 				log_this(", ", INFO);
 			}
-			log_this("%i %u", INFO, active_host_sockets[con_i].id, ntohs(active_host_sockets[con_i].addr.sin_port));
+			log_this(ANSI_COLOR_BRIGHT_BLUE "#%i: %u:%u" ANSI_COLOR_RESET, INFO, active_connections[con_i].id, ntohs(active_connections[con_i].addr.sin_addr.s_addr), ntohs(active_connections[con_i].addr.sin_port));
 		}
 		log_this(".\n", INFO);
+	} else {
+		log_this("(Not acting as host.)\n", INFO);
 	}
-	free(active_host_sockets);
+	free(active_connections);
+	active_connections = calloc(client_connections.length, sizeof(Connection));
+	con_count = get_active_connections(&client_connections, active_connections);
+	if (con_count > 0) {
+		log_this("%u active client socket(s):\n  ", INFO, con_count);
+		for (size_t con_i = 0; con_i < con_count; con_i++) {
+			if (con_i > 0) {
+				log_this(", ", INFO);
+			}
+			log_this(ANSI_COLOR_BRIGHT_CYAN "%i %u" ANSI_COLOR_RESET, INFO, active_connections[con_i].id, ntohs(active_connections[con_i].addr.sin_port));
+		}
+		log_this(".\n", INFO);
+	} else {
+		log_this("(Not acting as client.)\n", INFO);
+	}
+	free(active_connections);
 	log_this("Available commands:\n", INFO);
 	int commands_length = sizeof(commands)/sizeof(commands[0]);
 	for (int i = 0; i < commands_length; i++) {
-		log_this("  %s  %s\n", INFO, commands[i].command, commands[i].about);
+		log_this("  %s %s\n", INFO, commands[i].command, commands[i].about);
 	}
+	return 0;
+}
+
+int handle_say (char ** argv) {
+	//char * address = argv[0];
+	log_this("'Say' feature has not yet been implemented.\n", WARN);
 	return 0;
 }
 
 int handle_join (char ** argv) {
 	char * address = argv[0];
 	log_this("Attempting to connect to %s...\n", DEBUG, address);
-	log_this("Join feature has not yet been implemented.\n", WARN);
+	log_this("'Join' feature has not yet been implemented.\n", WARN);
 	return 0;
 }
 
@@ -241,7 +298,6 @@ int handle_host (char ** argv) {
 	ssize_t con_i = make_connection(socket_fd, INADDR_ANY, outgoing_port, &host_connections);
 	// todo: make connection at con_i available again if error is encountered below
 	if (con_i == -1) {
-		log_this("Failed to instantiate connection: %s\n", ERROR, strerror(errno));
 		return 0;
 	}
 	Connection * con = &(host_connections.head[con_i]);
@@ -262,24 +318,36 @@ int handle_host (char ** argv) {
 	return 0;
 }
 
-int handle_end_host (char ** argv) {
-	return 0;
-}
-
-int handle_end_join (char ** argv) {
-	return 0;
-}
-
 int handle_close (char ** argv) {
+	if (argv == NULL || argv[0] == NULL) {
+		log_this("Please provide a connection ID. Example: /close 0\n", WARN);
+		return 0;
+	}
+	ssize_t con_id = -1;
+	char * in_string = argv[0];
+	//size_t length = strlen(argv[0]);
+	//char in_string_low[length];
+	//for (uint16_t i = 0; i <= length; i++) {
+		//in_string_low[i] = tolower(in_string[i]);
+	//}
+	//if (in_string_low == "all") {
+		//// get all active connections
+		//// close each one
+		//log_this("Not yet implemented. TODO, WIP, etc.\n", ERROR);
+		//return 0;
+	//}
+	if (in_string != NULL && strlen(in_string) > 0) {
+		con_id = atoi(in_string);
+	}
+	if (con_id < 0) {
+		log_this("Failed to parse connection ID from input.\n", ERROR);
+		return -1;
+	}
+	Connection * con = get_any_con_by_id(con_id);
+	if (con != NULL) {
+		clear_con_close_sock(con);
+	}
 	return 0;
-}
-
-void cleanup_before_exit () {
-	log_this(ANSI_COLOR_RESET, ALWAYS);
-}
-
-void handle_term_signal (int sigint) {
-	cleanup_before_exit();
 }
 
 int read_user_input (char * user_input) {
@@ -343,19 +411,13 @@ int main (int argc, char ** argv) {
 	int user_input_return;
 	log_this("Welcome to your %s.\n", INFO, SOFTWARE_NAME);
 	if (initialize_connections(&host_connections) != 0) return EXIT_FAILURE;
-	handle_help(NULL);
-	// dev
-	handle_host(NULL);
-	//char * aport = "5555";
-	//handle_host(&aport);
-	handle_help(NULL);
-	// /dev
+	if (initialize_connections(&client_connections) != 0) return EXIT_FAILURE;
 	while(1 == 1) {
+		handle_help(NULL);
 		user_input_return = read_user_input(user_input);
 		if (user_input_return != 0) {
 			break;
 		};
-		handle_help(NULL);
 	};
 	fclose(stdout);
 	return EXIT_SUCCESS;
