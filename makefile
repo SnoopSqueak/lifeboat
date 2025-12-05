@@ -1,17 +1,23 @@
 CC=cc
+SRC = ./src
+BLD = ./build
 
-main : main.o conlist.o logger.o
-	$(CC) -o main main.o conlist.o logger.o
+.PHONY: all
+all: $(BLD)/main
 
-main.o : main.c
-	$(CC) -c main.c conlist.c logger.c
+$(BLD)/main : $(BLD)/main.o $(BLD)/conlist.o $(BLD)/logger.o
+	$(CC) -o $(BLD)/LifeBoat $(BLD)/main.o $(BLD)/conlist.o $(BLD)/logger.o
 
-conlist.o : conlist.c
-	$(CC) -c conlist.c
+$(BLD)/main.o : $(SRC)/main.c $(BLD)/logger.o $(BLD)/conlist.o
+	$(CC) -c $(SRC)/main.c -o $(BLD)/main.o
+
+$(BLD)/conlist.o : $(SRC)/conlist.c
+	$(CC) -c $(SRC)/conlist.c -o $(BLD)/conlist.o
 	
-logger.o : logger.c
-	$(CC) -c logger.c
+$(BLD)/logger.o : $(SRC)/logger.c
+	$(CC) -c $(SRC)/logger.c -o $(BLD)/logger.o
 
 .PHONY: clean
 clean :
-	rm main main.o logger.o conlist.o
+	rm -r $(BLD)/*.o
+	rm -r $(BLD)/main

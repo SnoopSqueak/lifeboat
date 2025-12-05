@@ -1,3 +1,6 @@
 main
+logger
+conlist
+lbui
 *.o
 *.geany
