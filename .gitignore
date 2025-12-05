@@ -1,3 +1,4 @@
 *.o
 *.geany
-./build/*
+build/*
+build/LifeBoat
