@@ -20,4 +20,4 @@ $(BLD)/logger.o : $(SRC)/logger.c
 .PHONY: clean
 clean :
 	rm -r $(BLD)/*.o
-	rm -r $(BLD)/main
+	rm -r $(BLD)/LifeBoat
