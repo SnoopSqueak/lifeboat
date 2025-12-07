@@ -14,6 +14,22 @@ struct conlist * make_conlist (size_t length) {
         return clist;
 };
 
+//~ con * get_any_con (ssize_t con_id) {
+	//~ con * c = get_con_by_id(con_id, &host_connections);
+	//~ if (con != NULL) {
+		//~ log_this("Found connection %i in host connections list.\n", DEBUG, con_id);
+	//~ } else {
+		//~ con = get_con_by_id(con_id, &client_connections);
+		//~ if (con != NULL) {
+			//~ log_this("Found connection %i in client connections list.\n", DEBUG, con_id);
+		//~ }
+	//~ }
+	//~ if (con == NULL) {
+		//~ log_this("Failed to find connection with ID %i.\n", ERROR, con_id);
+	//~ }
+	//~ return con;
+//~ }
+
 int free_conlist (struct conlist * clist) {
         free(clist->head);
         free(clist);

@@ -30,5 +30,6 @@ Clarity:
 - Avoid unnecessary use of typedef.
 - Avoid enums.
 
+This project was created in Geany, hence the .gch files.
 
 Nothing is set in stone. Thank you for reading.

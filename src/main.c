@@ -4,6 +4,8 @@
 #include "lbui.h"
 #include "conlist.h"
 #include "logger.h"
+#include <poll.h>
+
 #define SOFTWARE_NAME "LifeBoat"
 
 #define MAX_INPUT_LENGTH 2048
@@ -145,7 +147,27 @@ int handle_help (char ** argv) {
         //~ return 0;
 //~ }
 
+void exit_handler (int code, void * logger) {
+        if (logger == NULL) {
+                printf("Exit handler?\n");
+                printf("code %i\n", code);
+        } else {
+                log_this(logger, "exit code %i\n", LL_TRACE, code);
+        }
+        printf(AC_RESET);
+}
+
 int main (int argc, char ** argv) {
+        struct logger * lb_logger = make_logger(LL_NEVER, stdout, CF_ANSI);
+        if (lb_logger == NULL) {
+                printf("Failed to create logger.\n");
+                return EXIT_FAILURE;
+        }
+        int gotexit = on_exit(&exit_handler, lb_logger);
+        if (gotexit != 0) {
+                log_this(lb_logger, "Failed to set exit handler." AC_RESET "\n", LL_ERROR);
+                return EXIT_FAILURE;
+        }
         //~ struct conlist * hostcons = make_conlist(MAX_IN_CONS);
         //~ struct command commands[] = {
                 //~ {"/quit", "Exit this program.", handle_quit},
@@ -159,14 +181,23 @@ int main (int argc, char ** argv) {
         //~ };
         //~ char user_input[MAX_INPUT_LENGTH];
         //~ int user_input_return;
-        struct logger * lb_logger = make_logger(LL_NEVER, stdout, CF_ANSI);
         log_this(lb_logger, "Welcome to your %s.\n", LL_INFO, SOFTWARE_NAME);
-        //~ while(1 == 1) {
-                handle_help(NULL);
-                //user_input_return = read_user_input(user_input);
-                //~ if (user_input_return != 0) {
-                        //~ break;
-                //~ };
-        //~ };
+        int timeout = 500;
+        struct pollfd pfd = {STDIN_FILENO, POLLIN, 0};
+        while(1 == 1) {
+                int pres = poll(&pfd, 1, timeout);
+                if (pres > 0) {
+                        log_this(
+                                lb_logger,
+                                "Revents (%i): %i\n",
+                                LL_DEBUG,
+                                pres,
+                                pfd.revents
+                        );
+                } else {
+                        log_this(lb_logger, ".\n", LL_ALWAYS);
+                }
+        };
+        log_this(lb_logger, "Reached end of program.\n", LL_DEBUG);
         return EXIT_SUCCESS;
 }

@@ -16,8 +16,16 @@ $(BLD)/conlist.o : $(SRC)/conlist.c
 	
 $(BLD)/logger.o : $(SRC)/logger.c
 	$(CC) -c $(SRC)/logger.c -o $(BLD)/logger.o
+	
+reset: $(BLD)/reset_color
+
+$(BLD)/reset_color : $(BLD)/reset_color.o
+	$(CC) -o $(BLD)/ResetColor $(BLD)/reset_color.o
+
+$(BLD)/reset_color.o : $(SRC)/reset_color.c
+	$(CC) -c $(SRC)/reset_color.c -o $(BLD)/reset_color.o
 
 .PHONY: clean
 clean :
-	rm -r $(BLD)/*.o
-	rm -r $(BLD)/LifeBoat
+	rm -rf $(BLD)/*.o
+	rm -rf $(BLD)/LifeBoat

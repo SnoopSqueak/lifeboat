@@ -1,7 +1,15 @@
 #include "logger.h"
 
 struct logger * make_logger(int log_level, FILE * out_dest, int color_flag) {
-        return &((struct logger) {log_level, out_dest, color_flag});
+        struct logger * new_logger = malloc(sizeof(*new_logger));
+        new_logger->log_level = log_level;
+        new_logger->out_dest = out_dest;
+        new_logger->color_flag = color_flag;
+        return new_logger;
+}
+
+void free_logger(struct logger * old_logger) {
+        free(old_logger);
 }
 
 int log_this (struct logger * dest_logger, char * message, int msg_log_lvl, ...) {
@@ -9,8 +17,9 @@ int log_this (struct logger * dest_logger, char * message, int msg_log_lvl, ...)
                 dest_logger == NULL ||
                 msg_log_lvl == LL_NEVER ||
                 dest_logger->log_level == LL_ALWAYS
-        )
-        return 0;
+        ) {
+                return 0;
+        }
         if (dest_logger->log_level <= msg_log_lvl) {
                 va_list args;
                 va_start(args, msg_log_lvl);
