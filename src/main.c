@@ -4,200 +4,124 @@
 #include "lbui.h"
 #include "conlist.h"
 #include "logger.h"
-#include <poll.h>
+#include <signal.h>
+#include <sys/select.h>
+#include <sys/types.h>
+#include <termios.h>
 
 #define SOFTWARE_NAME "LifeBoat"
 
-#define MAX_INPUT_LENGTH 2048
+#define MAX_INPUT_LENGTH 4096
 #define MIN_INPUT_LENGTH 2
-#define MAX_PARAMS_LENGTH 32
 //#define MAX_IN_CONS 64
 #define MAX_IN_CONS 4
 //#define MAX_OUT_CONS 64
 #define MAX_OUT_CONS 4
 #define DEF_PORT 25252
 
-//~ int handle_quit (char ** argv) {
-        //~ log_this(log_level, "Exiting program.\n", LL_DEBUG);
-        //~ return 1;
-//~ }
+// TODO: move to separate program wrapper file.
+struct exit_obj {
+        struct termios ** termp;
+        struct termios ** termbu;
+        struct logger ** dest_logger;
+};
 
-/*
- * uint16_t outgoing_port = DEF_PORT;
-        if (argv != NULL) {
-                char * port_string = argv[0];
-                if (port_string != NULL && strlen(port_string) > 0) {
-                        outgoing_port = strtoul(port_string, NULL, 10);
-                }
-        }
- */
-
-int handle_help (char ** argv) {
-        //~ struct Connection * active_connections = calloc(host_connections.length, sizeof(struct Connection));
-        //~ size_t con_count = get_active_connections(&host_connections, active_connections);
-        //~ if (con_count > 0) {
-                //~ log_this("%u active host socket(s):\n  ", INFO, con_count);
-                //~ for (size_t con_i = 0; con_i < con_count; con_i++) {
-                        //~ if (con_i > 0) {
-                                //~ log_this(", ", INFO);
-                        //~ }
-                        //~ log_this(AC_BR_BLUE "#%i: %u:%u" AC_RESET, INFO, active_connections[con_i].id, ntohs(active_connections[con_i].addr.sin_addr.s_addr), ntohs(active_connections[con_i].addr.sin_port));
-                //~ }
-                //~ log_this(".\n", INFO);
-        //~ } else {
-                //~ log_this("(Not acting as host.)\n", INFO);
-        //~ }
-        //~ free(active_connections);
-        //~ active_connections = calloc(client_connections.length, sizeof(struct Connection));
-        //~ con_count = get_active_connections(&client_connections, active_connections);
-        //~ if (con_count > 0) {
-                //~ log_this("%u active client socket(s):\n  ", INFO, con_count);
-                //~ for (size_t con_i = 0; con_i < con_count; con_i++) {
-                        //~ if (con_i > 0) {
-                                //~ log_this(", ", INFO);
-                        //~ }
-                        //~ log_this(AC_BR_CYAN "%i %u" AC_RESET, INFO, active_connections[con_i].id, ntohs(active_connections[con_i].addr.sin_port));
-                //~ }
-                //~ log_this(".\n", INFO);
-        //~ } else {
-                //~ log_this("(Not acting as client.)\n", INFO);
-        //~ }
-        //~ free(active_connections);
-        //log_this(log_level, "Available commands:\n", LL_INFO);
-        //~ int commands_length = sizeof(commands)/sizeof(commands[0]);
-        //~ for (int i = 0; i < commands_length; i++) {
-                //~ log_this(log_level, "  %s %s\n", LL_INFO, commands[i].command, commands[i].about);
-        //~ }
-        return 0;
+// "int" as in "interrupt"
+void int_handler (int code) {
+        exit(EXIT_SUCCESS);
 }
 
-//~ int handle_close (char ** argv) {
-//~ if (argv == NULL || argv[0] == NULL) {
-//~ log_this("Please provide a connection ID. Example: /close 0\n", WARN);
-//~ return 0;
-//~ }
-//~ ssize_t con_id = -1;
-//~ char * in_string = argv[0];
-//~ //size_t length = strlen(argv[0]);
-//~ //char in_string_low[length];
-//~ //for (uint16_t i = 0; i <= length; i++) {
-//~ //in_string_low[i] = tolower(in_string[i]);
-//~ //}
-//~ //if (in_string_low == "all") {
-//~ //// get all active connections
-//~ //// close each one
-//~ //log_this("Not yet implemented. TODO, WIP, etc.\n", ERROR);
-//~ //return 0;
-//~ //}
-//~ if (in_string != NULL && strlen(in_string) > 0) {
-//~ con_id = atoi(in_string);
-//~ }
-//~ if (con_id < 0) {
-//~ log_this("Failed to parse connection ID from input.\n", ERROR);
-//~ return -1;
-//~ }
-//~ struct Connection * con = get_any_con_by_id(con_id);
-//~ if (con != NULL) {
-//~ clear_con_close_sock(con);
-//~ }
-//~ return 0;
-//~ }
-
-//~ int read_user_input (char * user_input) {
-        //~ // TODO: instead of fgets, use select with a timeout?
-        //~ fgets(user_input, MAX_INPUT_LENGTH, stdin);
-        //~ // Final character is expected to be newline
-        //~ int input_length = strlen(user_input);
-        //~ if (input_length < MIN_INPUT_LENGTH) {
-                //~ log_this(log_level, "Input rejected, failed to meet length requirements. Got %d, needed at least %d.\n", LL_WARN, input_length - 1, MIN_INPUT_LENGTH - 1);
-        //~ } else {
-                //~ int last_index = input_length - 1;
-                //~ if (user_input[last_index] == '\n') {
-                        //~ user_input[last_index] = '\0';
-                        //~ if (user_input[0] == '/') {
-                                //~ // Parse the command
-                                //~ char * user_command = strtok(user_input, " ");
-                                //~ for (int command_index = 0; command_index < sizeof(commands)/sizeof(commands[0]); command_index++) {
-                                        //~ struct Command known_command = commands[command_index];
-                                        //~ if (strcasecmp(user_command, known_command.command) == 0) {
-                                                //~ char * argv[MAX_PARAMS_LENGTH] = {0};
-                                                //~ char * word;
-                                                //~ int word_count = 0;
-                                                //~ while ((word = strtok(NULL, " "))) {
-                                                        //~ argv[word_count] = word;
-                                                        //~ word_count += 1;
-                                                //~ }
-                                                //~ return known_command.handler(argv);
-                                        //~ }
-                                //~ }
-                                //~ log_this(log_level, "Unrecognized command '%s'. Use /help to see available commands.\n", LL_WARN, user_command);
-                        //~ } else {
-                                //~ // send message to open channel(s)?
-                                //~ log_this(log_level, "Thank you for entering '%s'.\n", LL_INFO, user_input);
-                        //~ }
-                //~ } else {
-                        //~ log_this(log_level, "Input rejected, exceeded length limit. Maximum acceptable input length is %i characters.\n", LL_WARN, MAX_INPUT_LENGTH - 1);
-                        //~ while (user_input[last_index] != '\n') {
-                                //~ fgets(user_input, MAX_INPUT_LENGTH, stdin);
-                                //~ input_length = strlen(user_input);
-                                //~ last_index = input_length - 1;
-                        //~ };
-                //~ }
-        //~ }
-        //~ return 0;
-//~ }
-
-void exit_handler (int code, void * logger) {
-        if (logger == NULL) {
-                printf("Exit handler?\n");
-                printf("code %i\n", code);
+void exit_handler (int code, void * arg) {
+        struct exit_obj * eo = arg;
+        if (eo != NULL) {
+                if (eo->termp != NULL && eo->termbu != NULL) {
+                        memcpy(*(eo->termp), *(eo->termbu), sizeof(struct termios));
+                        if (tcsetattr(STDIN_FILENO, TCSADRAIN, *(eo->termp)) == -1) {
+                                printf("Failed to set terminal mode back to original settings. If you can't see this message, I apologize.\n");
+                        }
+                }
+                if (*(eo->dest_logger) != NULL) {
+                        log_this(*(eo->dest_logger), "Exit code %i.\n", LL_DEBUG, code);
+                }
+                printf("termp: %i\n", (*(eo->termp))->c_lflag);
+                printf("termbu: %i\n", (*(eo->termbu))->c_lflag);
         } else {
-                log_this(logger, "exit code %i\n", LL_TRACE, code);
+                printf("Warning: No exit object found.\n");
         }
         printf(AC_RESET);
 }
 
 int main (int argc, char ** argv) {
+        // Initialize a logger.
         struct logger * lb_logger = make_logger(LL_NEVER, stdout, CF_ANSI);
         if (lb_logger == NULL) {
                 printf("Failed to create logger.\n");
                 return EXIT_FAILURE;
         }
-        int gotexit = on_exit(&exit_handler, lb_logger);
-        if (gotexit != 0) {
-                log_this(lb_logger, "Failed to set exit handler." AC_RESET "\n", LL_ERROR);
+        log_this(lb_logger, "%s main function entered.\n", LL_DEBUG, SOFTWARE_NAME);
+        
+        // Initialize terminal attribute set pointer and backup.
+        size_t term_size = sizeof(struct termios);
+        struct termios * termp = malloc(term_size);
+        struct termios * termbu = malloc(term_size);
+        tcgetattr(STDIN_FILENO, termp);
+        memcpy(termbu, termp, term_size);
+        // Switch to non-canonical mode so I can output without waiting for newline.
+        termp->c_lflag &= ~(ECHO | ECHONL | ICANON);
+        if (tcsetattr(STDIN_FILENO, TCSADRAIN, termp) == -1) {
+                log_this(lb_logger, "Failed to set terminal mode to non-canonical.\n", LL_ERROR);
                 return EXIT_FAILURE;
         }
+        log_this(lb_logger, "Switched to non-canonical mode.\n", LL_DEBUG);
+        
+        // Initialize an exit handler.
+        struct exit_obj * lb_exit_obj = malloc(sizeof(struct exit_obj));
+        lb_exit_obj->dest_logger = &lb_logger;
+        lb_exit_obj->termp = &termp;
+        lb_exit_obj->termbu = &termbu;
+        // Assign exit handler to run on success, fail, and interrupt.
+        if (on_exit(&exit_handler, lb_exit_obj) != 0) {
+                log_this(lb_logger, "Failed to set exit handler.\n", LL_ERROR);
+                return EXIT_FAILURE;
+        }
+        if (signal(SIGINT, &int_handler) == SIG_ERR) {
+                log_this(lb_logger, "Failed to set signal handler: %s.\n", LL_ERROR, strerror(errno));
+                return EXIT_FAILURE;
+        }
+        log_this(lb_logger, "Assigned exit and signal handlers.\n", LL_DEBUG);
+        
+        // Initialize host and client connections.
         //~ struct conlist * hostcons = make_conlist(MAX_IN_CONS);
-        //~ struct command commands[] = {
-                //~ {"/quit", "Exit this program.", handle_quit},
-                //~ {"/host",
-                //~ "[port]  Open your " SOFTWARE_NAME " for others to join the"
-                //~ " lobby on port [port].", handle_host},
-                //~ {"/close",
-                //~ "[connection id]  Close the connection that matches the"
-                //~ " given [connection ID]. \"/close all\" to close all "
-                //~ "connections.", handle_close}
-        //~ };
-        //~ char user_input[MAX_INPUT_LENGTH];
-        //~ int user_input_return;
+        
+        // Prepare for user input.
         log_this(lb_logger, "Welcome to your %s.\n", LL_INFO, SOFTWARE_NAME);
-        int timeout = 500;
-        struct pollfd pfd = {STDIN_FILENO, POLLIN, 0};
-        while(1 == 1) {
-                int pres = poll(&pfd, 1, timeout);
-                if (pres > 0) {
-                        log_this(
-                                lb_logger,
-                                "Revents (%i): %i\n",
-                                LL_DEBUG,
-                                pres,
-                                pfd.revents
-                        );
-                } else {
-                        log_this(lb_logger, ".\n", LL_ALWAYS);
+        int sres;
+        char usr_buf[MAX_INPUT_LENGTH];
+        struct timeval * usr_poll_rate = malloc(sizeof(struct timeval));
+        usr_poll_rate->tv_sec = 0;
+        // microseconds, millionths of a second
+        usr_poll_rate->tv_usec = 5000000;
+        fd_set infiles;
+        FD_ZERO(&infiles);
+        FD_SET(STDIN_FILENO, &infiles);
+        // Main program loop.
+        while(true) {
+                // \x1b[H moves cursor to 1,1
+                // \x1b[0;J clears from cursor to N, or to end
+                printf("\x1b[H\x1b[0;J");
+                // Get user input.
+                sres = select(1, &infiles, NULL, NULL, usr_poll_rate);
+                if (sres == -1) {
+                        log_this(lb_logger, "Error: %s\n", LL_ERROR, strerror(errno));
+                        return EXIT_FAILURE;
+                } else if (sres > 0) {
+                        if (read(STDIN_FILENO, usr_buf, MAX_INPUT_LENGTH) == -1) {
+                                log_this(lb_logger, "Error reading standard input: %s\n", LL_WARN, strerror(errno));
+                        }
+                        // TODO: detect newline, parse input
+                        printf("%s\n", usr_buf);
                 }
         };
-        log_this(lb_logger, "Reached end of program.\n", LL_DEBUG);
+        log_this(lb_logger, "Exiting %s main function.\n", LL_DEBUG, SOFTWARE_NAME);
         return EXIT_SUCCESS;
 }
