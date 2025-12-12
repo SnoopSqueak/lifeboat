@@ -7,6 +7,7 @@
 
 #include <poll.h>
 #include <signal.h>
+#include <string.h>
 #include <sys/select.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -34,7 +35,7 @@ void int_handler (int code) {
 void exit_handler (int code, void * arg) {
         struct exit_obj * eo = arg;
         if (eo != NULL && eo->term != NULL) {
-                print_to_term(eo->term, "\n", 2);
+                print_to_term(eo->term, "\n", 1);
                 free_term(eo->term);
         }
 }
@@ -45,38 +46,49 @@ int main (int argc, char ** argv) {
         lb_exit_obj->term = term;
         if (on_exit(&exit_handler, lb_exit_obj) != 0) return EXIT_FAILURE;
         if (signal(SIGINT, &int_handler) == SIG_ERR) return EXIT_FAILURE;
-        clear_term(term);
-        print_to_term(term, "This is a test.", 15);
-        //~ int sres;
-        //~ char * usr_buf = calloc(MAX_INPUT_LENGTH, sizeof(char));
-        //~ size_t usri = 0;
-        //~ char uchar;
-        //~ struct timeval * usr_poll_rate = malloc(sizeof(struct timeval));
-        //~ usr_poll_rate->tv_sec = 0;
-        //~ usr_poll_rate->tv_usec = 500000; // microseconds, millionths of a second
-        //~ fd_set infiles;
-        //~ FD_ZERO(&infiles);
-        //~ FD_SET(STDIN_FILENO, &infiles);
-        //~ while(false) {
-                //~ clear_term(term);
-                //~ move_cursor_top(term);
-                //~ print_to_term(term, "Waiting.", 8);
-                //~ move_cursor_bottom(term);
-                //~ if (print_to_term(term, usr_buf, usri) == -1) return EXIT_FAILURE;
-                //~ sres = select(STDIN_FILENO+1, &infiles, NULL, NULL, usr_poll_rate);
-                //~ if (sres == -1) {
-                        //~ return EXIT_FAILURE;
-                //~ } else if (sres > 0) {
-                        //~ while (read(STDIN_FILENO, &uchar, 1) > 0) {
-                                //~ usr_buf[usri] = uchar;
-                                //~ usri++;
-                                //~ if (usri >= MAX_INPUT_LENGTH) {
-                                        //~ print_to_term(term, "Input overflow.", 16);
-                                        //~ return EXIT_FAILURE;
-                                //~ }
-                        //~ }
-                //~ }
-        //~ };
-        //~ print_to_term(term, "XWaiting.", 9);
+        print_to_term(term, "Hello\n", 6);
+        size_t usri = 0;
+        char * usrin = malloc(MAX_INPUT_LENGTH * sizeof(char));
+        size_t usrpi = 0;
+        char * usrinpart = malloc(MAX_INPUT_LENGTH * sizeof(char));
+        int uiplen;
+        char curc;
+        fd_set ins;
+        fd_set outs;
+        int sres;
+        int nfds = 0;
+        if (STDIN_FILENO > nfds) nfds = STDIN_FILENO;
+        if (STDOUT_FILENO > nfds) nfds = STDOUT_FILENO;
+        nfds += 1;
+        while (true) {
+                FD_ZERO(&ins);
+                FD_SET(STDIN_FILENO, &ins);
+                FD_ZERO(&outs);
+                FD_SET(STDOUT_FILENO, &outs);
+                sleep(1);
+                sres = select(nfds, &ins, &outs, NULL, NULL);
+                if (sres > 0) {
+                        if (FD_ISSET(STDIN_FILENO, &ins) != 0) {
+                                uiplen = read(STDIN_FILENO, usrinpart, MAX_INPUT_LENGTH);
+                                usrpi = 0;
+                                while (usrpi < uiplen) {
+                                        usrin[usri] = usrinpart[usrpi];
+                                        usri++;
+                                        usrpi++;
+                                }
+                                printf("\nusrpi: %lu\n", usrpi);
+                                if (strcmp(&curc, "\n") == 0) {
+                                        print_to_term(term, usrin, usri);
+                                        print_to_term(term, "\n", 1);
+                                        usri = 0;
+                                }
+                        }
+                        if (FD_ISSET(STDOUT_FILENO, &outs) != 0) {
+                                print_to_term(term, "Beep.\n", 6);
+                                print_to_term(term, usrin, usri);
+                        }
+                }
+        }
+        print_to_term(term, "Farewell.\n", 10);
         return EXIT_SUCCESS;
 }

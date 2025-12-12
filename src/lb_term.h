@@ -20,7 +20,6 @@ struct lb_term {
 
 struct lb_term * make_term (FILE * outdest);
 int free_term(struct lb_term * term);
-int clear_term(struct lb_term * term);
 int print_to_term(struct lb_term * term, char * msg, size_t len);
 
 #endif /* LB_TERM_H */
