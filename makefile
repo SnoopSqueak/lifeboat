@@ -5,14 +5,17 @@ BLD = ./build
 .PHONY: all
 all: $(BLD)/main
 
-$(BLD)/main : $(BLD)/main.o $(BLD)/conlist.o $(BLD)/lb_term.o
-	$(CC) -o $(BLD)/LifeBoat $(BLD)/main.o $(BLD)/conlist.o $(BLD)/lb_term.o
+$(BLD)/main : $(BLD)/main.o $(BLD)/conlist.o $(BLD)/lb_term.o $(BLD)/lb_main.o
+	$(CC) -o $(BLD)/LifeBoat $(BLD)/main.o $(BLD)/conlist.o $(BLD)/lb_term.o $(BLD)/lb_main.o
 
 $(BLD)/main.o : $(SRC)/main.c $(BLD)/lb_term.o $(BLD)/conlist.o
 	$(CC) -c $(SRC)/main.c -o $(BLD)/main.o
 
 $(BLD)/conlist.o : $(SRC)/conlist.c
 	$(CC) -c $(SRC)/conlist.c -o $(BLD)/conlist.o
+	
+$(BLD)/lb_main.o : $(SRC)/lb_main.c
+	$(CC) -c $(SRC)/lb_main.c -o $(BLD)/lb_main.o
 	
 $(BLD)/lb_term.o : $(SRC)/lb_term.c
 	$(CC) -c $(SRC)/lb_term.c -o $(BLD)/lb_term.o
