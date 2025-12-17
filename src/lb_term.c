@@ -1,6 +1,6 @@
 #include "lb_term.h"
 
-struct lb_term * get_term (FILE * insrc, size_t inmax, FILE * outdest, size_t outmax, size_t rowcount) {
+struct lb_term * get_term (FILE * insrc, size_t inmax, FILE * outdest, size_t outmax, size_t rowcount, size_t colcount) {
         struct lb_term * new_term = malloc(sizeof(struct lb_term));
         size_t term_size = sizeof(struct termios);
         new_term->attr = malloc(term_size);
@@ -13,6 +13,7 @@ struct lb_term * get_term (FILE * insrc, size_t inmax, FILE * outdest, size_t ou
         new_term->outbuf = malloc(outmax * sizeof(char));
         new_term->ini = 0;
         new_term->rowcount = rowcount;
+        new_term->colcount = colcount;
         setvbuf(outdest, NULL, _IONBF, BUFSIZ);
         tcgetattr(fileno(outdest), new_term->attr);
         memcpy(new_term->attrcpy, new_term->attr, term_size);
@@ -38,7 +39,6 @@ int get_input (struct lb_term * term, char * dest, size_t len) {
         ssize_t ei = -1;
         char ebuf[4];
         clearinbuf(term);
-        // todo: overflow error if too much?
         while (term->ini < len) {
                 c = read(fileno(term->instr), tbuf, len);
                 if (c < 0 && errno == EINTR) continue;
@@ -94,9 +94,13 @@ int get_input (struct lb_term * term, char * dest, size_t len) {
                                 term->ini++;
                         }
                         ti++;
+                        if (ti >= len) {
+                                errno = ERANGE;
+                                return -1;
+                        }
                 }
         };
-        return -1;
+        return 0;
 }
 
 int free_term(struct lb_term * term) {
@@ -110,40 +114,15 @@ int free_term(struct lb_term * term) {
 }
 
 int clearterm (struct lb_term * term) {
-        movcurtopleft(term);
-        return print_to_term(term, LB_CLEAR, strlen(LB_CLEAR));
-}
-
-int movcurleft (struct lb_term * term) {
-        movcurtopleft(term);
-        size_t i = 0;
-        while (i++ < term->rowcount) print_to_term(term, LB_NEWLINE, 4);
-        return 0;
-}
-
-int movcurtopleft (struct lb_term * term) {
-        return print_to_term(term, "\033[1;1H", 6);
-}
-
-int movcurbotleft (struct lb_term * term) {
-        movcurtopleft(term);
-        return printmany(term, LB_DOWN, 4, term->rowcount-1);
-}
-
-int printmany (struct lb_term * term, char * msg, size_t len, size_t amt) {
-        while (amt-- > 0) print_to_term(term, msg, len);
-        return 0;
-}
-
-int relmovcur (struct lb_term * term, int x, int y) {
-        if (x > 0) printmany(term, LB_RIGHT, 4, x);
-        else printmany(term, LB_LEFT, 4, abs(x));
-        if (y > 0) printmany(term, LB_DOWN, 4, y);
-        else printmany(term, LB_UP, 4, abs(y));
-        return 0;
+        return print_to_term(term, LB_CLEAR, 3);
 }
 
 int print_to_term(struct lb_term * term, char * msg, size_t len) {
         if (len == 0) return 0;
         return write(fileno(term->outstr), msg, len);
+}
+
+int print_lines(struct lb_term * term, char * lines) {
+        write(fileno(term->outstr), lines, term->colcount * term->rowcount);
+        return 0;
 }

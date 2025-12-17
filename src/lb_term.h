@@ -44,18 +44,15 @@ struct lb_term {
         struct termios * attr;
         struct termios * attrcpy;
         size_t rowcount;
+        size_t colcount;
 };
 
-struct lb_term * get_term (FILE * instr, size_t inmax, FILE * outdest, size_t outmax, size_t rowcount);
-int free_term(struct lb_term * term);
-int clearterm (struct lb_term * term);
-int movcurleft (struct lb_term * term);
-int movcurtopleft (struct lb_term * term);
-int movcurbotleft (struct lb_term * term);
-int printmany (struct lb_term * term, char * msg, size_t len, size_t amt);
-int relmovcur (struct lb_term * term, int x, int y);
+struct lb_term * get_term (FILE * instr, size_t inmax, FILE * outdest, size_t outmax, size_t rowcount, size_t colcount);
 int clearinbuf (struct lb_term * term);
 int get_input (struct lb_term * term, char * dest, size_t len);
-int print_to_term(struct lb_term * term, char * msg, size_t len);
+int free_term (struct lb_term * term);
+int clearterm (struct lb_term * term);
+int print_to_term (struct lb_term * term, char * msg, size_t len);
+int print_lines (struct lb_term * term, char * lines);
 
 #endif /* LB_TERM_H */
