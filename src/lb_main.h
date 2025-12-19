@@ -1,6 +1,10 @@
 #ifndef LB_MAIN_H
 #define LB_MAIN_H
 
+#include "lb_state.h"
+#include "lb_term.h"
+#include "lb_ui.h"
+
 #include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -18,8 +22,6 @@ int lb_run (size_t max_line_length, size_t num_of_lines, size_t num_of_cols);
 int lb_par_init (size_t * max_line_length, size_t * num_of_lines, size_t * num_of_cols);
 int lb_par_loop ();
 int lb_chld_loop ();
-int makeline (char * dest, size_t row, char * front, char * mid, char * end);
-int lb_view_landing();
 void sig_handler (int signo, siginfo_t *info, void *context);
 void intr_handler (int code);
 void exit_handler (int code);
