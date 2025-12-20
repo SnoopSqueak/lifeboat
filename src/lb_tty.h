@@ -1,6 +1,8 @@
 #ifndef LB_TTY_H
 #define LB_TTY_H
 
+#include "lb_string.h"
+
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -33,29 +35,31 @@
 #define LB_CLEAR "\033[J"
 #define LB_NEWLINE "\033[13"
 
-struct lb_strm {
-        char * buf;
+struct lb_stream {
+        struct lb_string * string;
         FILE * file;
-        size_t * len;
+        size_t maxsize;
 };
 
 struct lb_tty {
         size_t curi;
-        struct lb_strm * ins;
-        struct lb_strm * outs;
+        struct lb_stream * ins;
+        struct lb_stream * outs;
         struct termios * attr;
         struct termios * attrcpy;
-        size_t * nrow;
-        size_t * ncol;
+        size_t nrow;
+        size_t ncol;
 };
 
-struct lb_strm * getstrm (FILE * file, char * buf, size_t * len);
-int freestrm (struct lb_strm * strm);
-struct lb_tty * gettty (FILE * fin, size_t * lin, FILE * fout, size_t * lout, size_t * nrow, size_t * ncol);
-int clearin (struct lb_tty * tty);
-int getin (struct lb_tty * tty, char * dest, size_t * len);
-int freetty (struct lb_tty * tty);
-int clearout (struct lb_tty * tty);
-int putout (struct lb_tty * tty, char * src, size_t * len);
+struct lb_stream * init_stream (FILE * file, size_t * maxsize);
+int free_stream (struct lb_stream * stream);
+struct lb_tty * init_tty (FILE * fin, size_t * lin, FILE * fout, size_t * lout, size_t * nrow, size_t * ncol);
+int free_tty (struct lb_tty * tty);
+int clear_tty_in (struct lb_tty * tty);
+int clear_tty_out (struct lb_tty * tty);
+int put_to_tty_out (struct lb_tty * tty, struct lb_string * string);
+int put_to_tty_in (struct lb_tty * tty, struct lb_string * string);
+int take_from_tty_in (struct lb_tty * tty, int count);
+int get_tty_in_line (struct lb_tty * tty);
 
 #endif /* LB_TTY_H */

@@ -2,7 +2,7 @@
 #define LB_UI_H
 
 #include "lb_state.h"
-#include "lb_term.h"
+#include "lb_tty.h"
 
 #define AC_BLACK "\x1b[30m"
 #define AC_RED "\x1b[31m"
@@ -30,8 +30,7 @@
         //~ int (* handler)(char ** argv);
 //~ };
 
-int lb_ui_init(struct lb_state * state);
 int lb_line (char * dest, size_t row, char * front, char * mid, char * end);
-int lb_view_landing();
+int lb_view_landing (struct lb_tty * tty);
 
 #endif /* LB_UI_H */

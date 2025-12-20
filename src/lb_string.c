@@ -7,6 +7,7 @@ struct lb_string * init_ntstring (char * ntstring) {
         count++;
         str->ntsize = count;
         str->ntstring = malloc(count * sizeof(char));
+        str->maxsize = -1;
         count = 0;
         while (count < str->ntsize) {
                 str->ntstring[count] = ntstring[count];
@@ -19,6 +20,7 @@ struct lb_string * init_utstring (char * utstring, size_t nchar) {
         struct lb_string * str = malloc(sizeof(struct lb_string));
         str->ntsize = nchar + 1;
         str->ntstring = malloc(str->ntsize * sizeof(char));
+        str->maxsize = -1;
         size_t count = 0;
         while (count < nchar) {
                 str->ntstring[count] = utstring[count];
@@ -35,25 +37,30 @@ ssize_t count_ntstring (char * ntstring) {
         return i;
 };
 
-int grow_string (struct lb_string * str, size_t new_size) {
+int grow_string (struct lb_string * string, size_t new_size) {
         if (new_size < 0) {
                 errno = ERANGE;
                 return -1;
         };
-        str->ntstring = realloc(str->ntstring, new_size);
-        size_t old_i = str->ntsize - 1;
-        while (old_i < new_size - 1) {
-                str->ntstring[old_i] = ' ';
+        if (string->maxsize > -1 && new_size > string->maxsize) {
+                errno = ERANGE;
+                return -1;
+        };
+        size_t old_i = string->ntsize - 1;
+        string->ntstring = realloc(string->ntstring, new_size);
+        while (old_i < new_size - 2) {
+                string->ntstring[old_i] = ' ';
                 old_i++;
         };
-        str->ntstring[old_i] = '\0';
-        str->ntsize = new_size;
+        string->ntstring[old_i] = '\0';
+        string->ntsize = new_size;
         return 0;
 };
 
-int put_in_string (struct lb_string * dest, size_t index, struct lb_string * src) {
+int put_in_string (struct lb_string * dest, ssize_t index, struct lb_string * src) {
         size_t siz = src->ntsize;
         if (siz == 0) return 0;
+        if (index == -1) index = dest->ntsize - 1;
         grow_string(dest, dest->ntsize + src->ntsize - 1);
         size_t i = dest->ntsize - 1;
         while (i > index) {
@@ -74,7 +81,7 @@ int take_from_string (struct lb_string * dest, size_t index, ssize_t count) {
                 errno = ERANGE;
                 return -1;
         };
-        if (count == -1) count = dest->ntsize - index;
+        if (count == -1) count = dest->ntsize - index - 1;
         size_t c = 0;
         while (c < dest->ntsize) {
                 dest->ntstring[index + c] = dest->ntstring[index + c + count];
@@ -83,6 +90,10 @@ int take_from_string (struct lb_string * dest, size_t index, ssize_t count) {
         dest->ntstring = realloc(dest->ntstring, dest->ntsize - count);
         dest->ntsize = dest->ntsize - count;
         return 0;
+};
+
+int clear_string (struct lb_string * string) {
+        return take_from_string(string, 0, -1);
 };
 
 int char_to_int (char c, int * dest) {

@@ -1,7 +1,7 @@
 #include "lb_main.h"
 
 static int chid;
-static struct lb_term * term;
+static struct lb_tty * tty = NULL;
 
 int lb_run (size_t max_line_length, size_t num_of_lines, size_t num_of_cols) {
         chid = fork();
@@ -19,9 +19,9 @@ int lb_par_init (size_t * max_line_length, size_t * num_of_lines, size_t * num_o
         usract.sa_flags = SA_SIGINFO;
         usract.sa_sigaction = &sig_handler;
         if (sigaction(SIGUSR1, &usract, NULL) == -1) return EXIT_FAILURE;
-        
-        term = get_term(stdin, *max_line_length, stdout, *max_line_length * *num_of_lines, *num_of_lines, *num_of_cols);
-        lb_state_init(SOFTWARE_NAME, SOFTWARE_VERSION, term);
+        size_t max_out_length = *max_line_length * *num_of_lines;
+        tty = init_tty(stdin, max_line_length, stdout, &max_out_length, num_of_lines, num_of_cols);
+        lb_state_init(SOFTWARE_NAME, SOFTWARE_VERSION, tty);
         
         struct sigaction exitact;
         exitact.sa_flags = SA_SIGINFO;
@@ -39,8 +39,9 @@ int lb_par_init (size_t * max_line_length, size_t * num_of_lines, size_t * num_o
 
 int lb_par_loop () {
         while (true) {
-                if (lb_view_landing() != 0) return -1;
-                get_input(term, term->inbuf, term->MAX_INBUF);
+                if (lb_view_landing(tty) != 0) return -1;
+                //get_input(tty, term->inbuf, term->MAX_INBUF);
+                get_tty_in_line(tty);
                 //~ printf("Processing: %s\n", term->inbuf);
         }
         return 0;
@@ -68,9 +69,6 @@ void intr_handler (int code) {
 }
 
 void exit_handler (int code) {
-        if (term != NULL) {
-                print_to_term(term, "\n", 1);
-                free_term(term);
-        }
+        if (tty != NULL) free_tty(tty);
         if (chid != 0) kill(chid, SIGKILL);
 }

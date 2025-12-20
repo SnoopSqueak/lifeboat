@@ -1,17 +1,17 @@
 #ifndef LB_STATE_H
 #define LB_STATE_H
 
-#include "lb_term.h"
+#include "lb_tty.h"
 
 struct lb_state {
         char * swname;
         char * swvers;
-        struct lb_term * term;
+        struct lb_tty * tty;
 };
 
-int lb_state_init (char * lbname, char * lbversion, struct lb_term * lbterm);
+int lb_state_init (char * lbname, char * lbversion, struct lb_tty * lbtty);
 char * lb_name ();
 char * lb_version ();
-struct lb_term * get_lb_term ();
+struct lb_tty * get_lb_tty ();
 
 #endif /* LB_STATE_H */

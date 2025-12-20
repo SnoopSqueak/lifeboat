@@ -2,10 +2,10 @@
 
 static struct lb_state lbstate;
 
-int lb_state_init (char * lbname, char * lbversion, struct lb_term * lbterm) {
+int lb_state_init (char * lbname, char * lbversion, struct lb_tty * lbtty) {
         lbstate.swname = lbname;
         lbstate.swvers = lbversion;
-        lbstate.term = lbterm;
+        lbstate.tty = lbtty;
         return 0;
 };
 
@@ -17,6 +17,6 @@ char * lb_version () {
         return lbstate.swvers;
 };
 
-struct lb_term * get_lb_term () {
-        return lbstate.term;
+struct lb_tty * get_lb_tty () {
+        return lbstate.tty;
 };

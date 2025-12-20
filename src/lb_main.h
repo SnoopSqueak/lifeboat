@@ -2,7 +2,7 @@
 #define LB_MAIN_H
 
 #include "lb_state.h"
-#include "lb_term.h"
+#include "lb_tty.h"
 #include "lb_ui.h"
 
 #include <signal.h>
