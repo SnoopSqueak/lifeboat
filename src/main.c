@@ -16,15 +16,12 @@
 #define TERM_COLS 80
 
 int main (int argc, char ** argv) {
-        struct lb_string * str = init_ntstring("Hello, world!");
-        printf("Strang: %s\n", str->ntstring);
-        struct lb_string * extra = init_ntstring("shitty fucking ");
-        put_in_string(str, 7, extra);
-        printf("Strang: %s\n", str->ntstring);
-        take_from_string(str, 4, 3);
-        if (take_from_string(str, 8, 20) == -1) return EXIT_FAILURE;
-        printf("Strang: %s\n", str->ntstring);
-        free_string(extra);
-        free_string(str);
+        //~ struct lb_string * result = init_ntstring("");
+        //~ printf("String val: |%s| length %lu\n", result->ntstring, result->ntsize);
+        
+        struct lb_string * str = int_to_string(365);
+        printf("Stringified: %s\n", str->ntstring);
+        free(str);
+        
         //~ return lb_run(MAX_INPUT_LENGTH, TERM_ROWS, TERM_COLS);
 };
