@@ -1,86 +1,91 @@
 #include "lb_ui.h"
 
-int lb_line (char * dest, size_t row, char * front, char * mid, char * end) {
+int format_line (struct lb_string * dest, struct lb_state * state, struct lb_string * front, struct lb_string * mid, struct lb_string * end) {
         size_t flen = 0;
         size_t mlen = 0;
         size_t elen = 0;
-        if (front != NULL) flen = strlen(front);
-        if (mid != NULL) mlen += strlen(mid);
-        if (end != NULL) elen += strlen(end);
+        if (front != NULL) flen = front->ntsize - 1;
+        if (mid != NULL) mlen += mid->ntsize - 1;
+        if (end != NULL) elen += end->ntsize - 1;
         size_t len = flen + mlen + elen;
-        size_t cc = get_lb_tty()->ncol;
-        size_t rc = get_lb_tty()->nrow;
+        struct lb_string * tmp;
+        size_t cc = state->tty->ncol;
         if (len > cc) {
                 errno = ERANGE;
                 return -1;
         }
         size_t i = 0;
-        size_t di = (cc+1) * row;
         size_t mspace;
         size_t mpad;
         size_t mi;
         if (front != NULL) {
-                while (i < flen) {
-                        dest[di+i] = front[i];
-                        i++;
-                }
-        }
+                if (put_in_string(dest, -1, front) == -1) return -1;
+                i += flen;
+        };
         if (mid != NULL) {
                 if (end != NULL) {
                         mspace = cc - elen - i;
                 } else {
                         mspace = cc - i;
-                }
-                mpad = (mspace - mlen)/2;
+                };
+                mpad = (mspace - mlen) / 2;
+                mi = 0;
+                tmp = init_ntstring(" ");
+                while (mi < mpad) {
+                        if (put_in_string(dest, -1, tmp) == -1) return -1;
+                        mi++;
+                        i++;
+                };
+                if (put_in_string(dest, -1, mid) == -1) return -1;
+                i += mlen;
                 mi = 0;
                 while (mi < mpad) {
-                        dest[di+i] = ' ';
+                        if (put_in_string(dest, -1, tmp) == -1) return -1;
                         mi++;
                         i++;
-                }
-                mi = 0;
-                while (mi < mlen) {
-                        dest[di+i] = mid[mi];
-                        mi++;
-                        i++;
-                }
-                mi = 0;
-                while (mi < mpad) {
-                        dest[di+i] = ' ';
-                        mi++;
-                        i++;
-                }
-        }
+                };
+                free_string(tmp);
+        };
+        tmp = init_ntstring(" ");
+        if (tmp == NULL) return -1;
         if (end != NULL) {
-                while (i < cc) {
-                        if (i < cc - elen) {
-                                dest[di+i] = ' ';
-                        } else {
-                                dest[di+i] = end[i - cc + elen];
-                        }
+                printf("%lu\n", cc - elen);
+                while (i < cc - elen) {
+                        if (put_in_string(dest, -1, tmp) == -1) return -1;
                         i++;
-                }
-        }
-        if (len == 0) {
-                while (i < cc) {
-                        dest[di+i] = ' ';
-                        i++;
-                }
-        }
-        if (row == rc - 1) {
-                dest[di+i] = '\0';
+                };
+                if (put_in_string(dest, -1, end) == -1) return -1;
         } else {
-                dest[di+i] = '\n';
-        }
+                while (i < cc) {
+                        if (put_in_string(dest, -1, tmp) == -1) return -1;
+                        i++;
+                };
+        };
+        free_string(tmp);
+        tmp = init_ntstring("\n");
+        if (tmp == NULL) return -1;
+        if (put_in_string(dest, -1, tmp) == -1) return -1;
+        free_string(tmp);
         return 0;
 }
 
-int lb_view_landing(struct lb_tty * tty) {
-        int errors = 0;
-        clear_tty_out(tty);
-        //~ size_t fullsize = (tty->ncol + 1) * tty->nrow * sizeof(char);
-        struct lb_string * lines = init_ntstring("This is a test.");
-        struct lb_string * left = init_ntstring(LB_LEFT);
+int view_landing(struct lb_state * state) {
+        clear_tty_out(state->tty);
+        struct lb_string * lines = init_ntstring("");
+        //~ struct lb_string * left = init_ntstring(LB_LEFT);
+        struct lb_string * front = init_ntstring(state->swname);
+        // invisible/control characters still count against total...
+        //~ struct lb_string * mid = init_ntstring(AC_BR_BLACK "status: offline" AC_RESET);
+        struct lb_string * mid = init_ntstring("status: offline");
+        struct lb_string * end = init_ntstring(state->swvers);
+        if (lines == NULL || front == NULL || mid == NULL || end == NULL) return -1;
+        if (format_line(lines, state, front, mid, end) == -1) return -1;
+        if (put_to_tty_out(state->tty, lines) == -1) return -1;
+        free_string(front);
+        free_string(mid);
+        free_string(end);
+        free_string(lines);
+        
         //char * lines = calloc((tty->ncol + 1) * tty->nrow, sizeof(char));
         //~ errors += lb_line(lines, 0, lb_name(), AC_BR_BLACK "status: offline" AC_RESET, lb_version());
         //~ errors += lb_line(lines, 1, "Hosting ## room(s) across ## socket(s).", NULL, "Accepted ## active connection(s).");
@@ -90,9 +95,9 @@ int lb_view_landing(struct lb_tty * tty) {
         //~ errors += lb_line(lines, 5, AC_CYAN "Type /help to see available commands." AC_RESET, NULL, NULL);
         //~ errors += lb_line(lines, 6, NULL, AC_BR_BLACK "(notification area)" AC_RESET, NULL);
         //~ errors += lb_line(lines, 7, tty->ins->string->ntstring, NULL, NULL);
-        if (errors == 0) put_to_tty_out(tty, lines);
+        //~ if (errors == 0) put_to_tty_out(tty, lines);
         //~ for (size_t i = 0; i < tty->ncol; i++) put_to_tty_out(tty, left);
-        free(lines);
-        free(left);
-        return errors;
+        //~ free(lines);
+        //~ free(left);
+        return 0;
 }

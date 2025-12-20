@@ -7,11 +7,7 @@ struct lb_state {
         char * swname;
         char * swvers;
         struct lb_tty * tty;
+        pid_t chid;
 };
-
-int lb_state_init (char * lbname, char * lbversion, struct lb_tty * lbtty);
-char * lb_name ();
-char * lb_version ();
-struct lb_tty * get_lb_tty ();
 
 #endif /* LB_STATE_H */

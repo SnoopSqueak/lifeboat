@@ -5,8 +5,8 @@ BLD = ./build
 .PHONY: all
 all: $(BLD)/main
 
-$(BLD)/main : $(BLD)/main.o $(BLD)/lb_main.o $(BLD)/conlist.o $(BLD)/lb_tty.o $(BLD)/lb_state.o $(BLD)/lb_ui.o $(BLD)/lb_string.o
-	$(CC) -o $(BLD)/LifeBoat $(BLD)/main.o $(BLD)/lb_main.o $(BLD)/conlist.o $(BLD)/lb_tty.o $(BLD)/lb_state.o $(BLD)/lb_ui.o $(BLD)/lb_string.o
+$(BLD)/main : $(BLD)/main.o $(BLD)/lb_main.o $(BLD)/conlist.o $(BLD)/lb_tty.o $(BLD)/lb_ui.o $(BLD)/lb_string.o
+	$(CC) -o $(BLD)/LifeBoat $(BLD)/main.o $(BLD)/lb_main.o $(BLD)/conlist.o $(BLD)/lb_tty.o $(BLD)/lb_ui.o $(BLD)/lb_string.o
 
 $(BLD)/main.o : $(SRC)/main.c $(BLD)/lb_tty.o $(BLD)/conlist.o
 	$(CC) -c $(SRC)/main.c -o $(BLD)/main.o
@@ -22,9 +22,6 @@ $(BLD)/lb_tty.o : $(SRC)/lb_tty.c
 	
 $(BLD)/lb_ui.o : $(SRC)/lb_ui.c
 	$(CC) -c $(SRC)/lb_ui.c -o $(BLD)/lb_ui.o
-
-$(BLD)/lb_state.o : $(SRC)/lb_state.c
-	$(CC) -c $(SRC)/lb_state.c -o $(BLD)/lb_state.o
 
 $(BLD)/lb_string.o : $(SRC)/lb_string.c
 	$(CC) -c $(SRC)/lb_string.c -o $(BLD)/lb_string.o

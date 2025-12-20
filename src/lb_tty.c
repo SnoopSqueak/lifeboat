@@ -1,15 +1,23 @@
 #include "lb_tty.h"
 
-struct lb_stream * init_stream (FILE * file, size_t*  maxsize) {
+struct lb_stream * init_stream (FILE * file, size_t * maxsize) {
         struct lb_stream * stream = malloc(sizeof(struct lb_stream));
+        if (stream == NULL) {
+                errno = ENOMEM;
+                return NULL;
+        };
         stream->file = file;
         stream->string = init_ntstring("");
+        if (stream->string == NULL) {
+                errno = ENOMEM;
+                return NULL;
+        };
         stream->maxsize = *maxsize;
         return stream;
 };
 
 int free_stream (struct lb_stream * stream) {
-        free_string(stream->string);
+        if (free_string(stream->string) == -1) return -1;
         free(stream);
         return 0;
 };
@@ -17,16 +25,23 @@ int free_stream (struct lb_stream * stream) {
 struct lb_tty * init_tty (FILE * fin, size_t * lin, FILE * fout, size_t * lout, size_t * nrow, size_t * ncol) {
         size_t termsize = sizeof(struct termios);
         struct lb_tty * tty = malloc(sizeof(struct lb_tty));
+        if (tty == NULL) {
+                errno = ENOMEM;
+                return NULL;
+        };
         tty->ins = init_stream(fin, lin);
-        tty->ins->maxsize = *lin;
         tty->outs = init_stream(fout, lout);
+        tty->attr = malloc(termsize);
+        tty->attrcpy = malloc(termsize);
+        if (tty->ins == NULL || tty->outs == NULL || tty->attr == NULL || tty->attrcpy == NULL) {
+                errno = ENOMEM;
+                return NULL;
+        };
+        tty->ins->maxsize = *lin;
         tty->outs->maxsize = *lout;
         tty->curi = 0;
         tty->nrow = *nrow;
         tty->ncol = *ncol;
-        tty->attr = malloc(termsize);
-        tty->attrcpy = malloc(termsize);
-        // Store old tty attributes, set new tty attributes.
         setvbuf(fout, NULL, _IONBF, BUFSIZ);
         tcgetattr(fileno(fout), tty->attr);
         memcpy(tty->attrcpy, tty->attr, termsize);
@@ -39,40 +54,49 @@ struct lb_tty * init_tty (FILE * fin, size_t * lin, FILE * fout, size_t * lout, 
 };
 
 int free_tty (struct lb_tty * tty) {
+        bool tripped = false;
         tcsetattr(fileno(tty->outs->file), TCSADRAIN, tty->attrcpy);
-        free_stream(tty->ins);
-        free_stream(tty->outs);
+        if (free_stream(tty->ins) == -1) tripped = true;
+        if (free_stream(tty->outs) == -1) tripped = true;
         free(tty->attr);
         free(tty->attrcpy);
         free(tty);
-        return 0;
+        return tripped ? -1 : 0;
 };
 
 int clear_tty_in (struct lb_tty * tty) {
-        take_from_string(tty->ins->string, 0, -1);
+        if (take_from_string(tty->ins->string, 0, -1) == -1) return -1;
         tty->curi = 0;
         return 0;
 };
 
 int clear_tty_out (struct lb_tty * tty) {
         struct lb_string * orig = init_ntstring(LB_ORIGIN);
-        put_to_tty_out(tty, orig);
-        free(orig);
+        if (orig == NULL) {
+                errno = ENOMEM;
+                return -1;
+        };
+        if (put_to_tty_out(tty, orig) == -1) return -1;
+        if (free_string(orig) == -1) return -1;
         struct lb_string * clear = init_ntstring(LB_CLEAR);
-        put_to_tty_out(tty, clear);
-        free(clear);
-        clear_string(tty->outs->string);
+        if (clear == NULL) {
+                errno = ENOMEM;
+                return -1;
+        };
+        if (put_to_tty_out(tty, clear) == -1) return -1;
+        if (free_string(clear) == -1) return -1;
+        if (clear_string(tty->outs->string) == -1) return -1;
         return 0;
 };
 
 int put_to_tty_out (struct lb_tty * tty, struct lb_string * string) {
-        put_in_string(tty->outs->string, -1, string);
+        if (put_in_string(tty->outs->string, -1, string) == -1) return -1;
         write(fileno(tty->outs->file), tty->outs->string->ntstring, tty->outs->string->ntsize);
         return 0;
 };
 
 int put_to_tty_in (struct lb_tty * tty, struct lb_string * string) {
-        put_in_string(tty->ins->string, tty->curi, string);
+        if (put_in_string(tty->ins->string, tty->curi, string) == -1) return -1;
         tty->curi += string->ntsize - 1;
         return 0;
 };
@@ -88,7 +112,7 @@ int take_from_tty_in (struct lb_tty * tty, int count) {
                 };
                 tty->curi -= count;
         };
-        take_from_string(tty->ins->string, i, count);
+        if (take_from_string(tty->ins->string, i, count) == -1) return -1;
         return 0;
 };
 
@@ -96,22 +120,29 @@ int get_tty_in_line (struct lb_tty * tty) {
         ssize_t nbytes;
         size_t len = tty->ins->maxsize;
         char * tbuf = calloc(len, sizeof(char));
+        if (tbuf == NULL) {
+                errno = ENOMEM;
+                return -1;
+        };
         size_t ti;
-        //~ char * dest = tty->ins->buf;
         bool esc = false;
-        clear_tty_in(tty);
+        if (clear_tty_in(tty) == -1) return -1;
         struct lb_string * tmp;
         while (true) {
                 nbytes = read(fileno(tty->ins->file), tbuf, len);
-                if (nbytes < 0 && errno != EINTR) return errno;
+                if (nbytes < 0 && errno != EINTR) return -1;
                 ti = 0;
                 while (ti < nbytes) {
                         switch (tbuf[ti]) {
                                 case AS_ESCAPE:
                                         if (esc) {
                                                 tmp = init_ntstring("\\");
-                                                put_to_tty_in(tty, tmp);
-                                                free(tmp);
+                                                if (tmp == NULL) {
+                                                        errno = ENOMEM;
+                                                        return -1;
+                                                };
+                                                if (put_to_tty_in(tty, tmp) == -1) return -1;
+                                                free_string(tmp);
                                                 esc = false;
                                         } else {
                                                 esc = true;
@@ -123,8 +154,12 @@ int get_tty_in_line (struct lb_tty * tty) {
                                 break;
                                 default:
                                         tmp = init_ntstring(&tbuf[ti]);
-                                        put_to_tty_in(tty, tmp);
-                                        free(tmp);
+                                        if (tmp == NULL) {
+                                                errno = ENOMEM;
+                                                return -1;
+                                        };
+                                        if (put_to_tty_in(tty, tmp) == -1) return -1;
+                                        free_string(tmp);
                                 break;
                         };
                 };

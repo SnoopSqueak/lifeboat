@@ -2,11 +2,13 @@
 
 struct lb_string * init_ntstring (char * ntstring) {
         struct lb_string * str = malloc(sizeof(struct lb_string));
+        if (str == NULL) return NULL;
         size_t count = 0;
         while (ntstring[count] != '\0') count++;
         count++;
         str->ntsize = count;
         str->ntstring = malloc(count * sizeof(char));
+        if (str->ntstring == NULL) return NULL;
         str->maxsize = -1;
         count = 0;
         while (count < str->ntsize) {
@@ -18,8 +20,10 @@ struct lb_string * init_ntstring (char * ntstring) {
 
 struct lb_string * init_utstring (char * utstring, size_t nchar) {
         struct lb_string * str = malloc(sizeof(struct lb_string));
+        if (str == NULL) return NULL;
         str->ntsize = nchar + 1;
         str->ntstring = malloc(str->ntsize * sizeof(char));
+        if (str->ntstring == NULL) return NULL;
         str->maxsize = -1;
         size_t count = 0;
         while (count < nchar) {
@@ -38,17 +42,17 @@ ssize_t count_ntstring (char * ntstring) {
 };
 
 int grow_string (struct lb_string * string, size_t new_size) {
-        if (new_size < 0) {
-                errno = ERANGE;
-                return -1;
-        };
         if (string->maxsize > -1 && new_size > string->maxsize) {
                 errno = ERANGE;
                 return -1;
         };
         size_t old_i = string->ntsize - 1;
         string->ntstring = realloc(string->ntstring, new_size);
-        while (old_i < new_size - 2) {
+        if (string->ntstring == NULL) {
+                errno = ENOMEM;
+                return -1;
+        };
+        while (old_i < new_size - 1) {
                 string->ntstring[old_i] = ' ';
                 old_i++;
         };
@@ -57,11 +61,26 @@ int grow_string (struct lb_string * string, size_t new_size) {
         return 0;
 };
 
+int shrink_string (struct lb_string * dest, size_t newsize) {
+        if (newsize == dest->ntsize) return 0;
+        if (newsize > dest->ntsize) {
+                errno = ERANGE;
+                return -1;
+        };
+        dest->ntstring = realloc(dest->ntstring, newsize);
+        if (dest->ntstring == NULL) {
+                errno = ENOMEM;
+                return -1;
+        };
+        dest->ntsize = newsize;
+        return 0;
+};
+
 int put_in_string (struct lb_string * dest, ssize_t index, struct lb_string * src) {
         size_t siz = src->ntsize;
         if (siz == 0) return 0;
         if (index == -1) index = dest->ntsize - 1;
-        grow_string(dest, dest->ntsize + src->ntsize - 1);
+        if (grow_string(dest, dest->ntsize + src->ntsize - 1) == -1) return -1;
         size_t i = dest->ntsize - 1;
         while (i > index) {
                 dest->ntstring[i - 1] = dest->ntstring[i - siz];
@@ -81,14 +100,13 @@ int take_from_string (struct lb_string * dest, size_t index, ssize_t count) {
                 errno = ERANGE;
                 return -1;
         };
-        if (count == -1) count = dest->ntsize - index - 1;
+        if (count == -1) count = dest->ntsize - 1 - index;
         size_t c = 0;
-        while (c < dest->ntsize) {
+        while (index + c + count < dest->ntsize) {
                 dest->ntstring[index + c] = dest->ntstring[index + c + count];
                 c++;
         };
-        dest->ntstring = realloc(dest->ntstring, dest->ntsize - count);
-        dest->ntsize = dest->ntsize - count;
+        if (shrink_string(dest, dest->ntsize - count) == -1) return -1;
         return 0;
 };
 
@@ -97,7 +115,8 @@ int clear_string (struct lb_string * string) {
 };
 
 int char_to_int (char c, int * dest) {
-        size_t base = count_ntstring(ONESLIST);
+        ssize_t base = count_ntstring(ONESLIST);
+        if (base == -1) return -1;
         if (c < AS_FIRSTNUM || c > AS_FIRSTNUM + base) {
                 errno = ERANGE;
                 return -1;
@@ -107,7 +126,7 @@ int char_to_int (char c, int * dest) {
 };
 
 bool is_minus_char (char c) {
-        return (c == '-');
+        return (c == MINUSSTRING[0]);
 };
 
 int string_to_int (struct lb_string * str, int * dest) {
@@ -136,18 +155,27 @@ int string_to_int (struct lb_string * str, int * dest) {
 
 struct lb_string * int_to_string (int n) {
         struct lb_string * result = init_ntstring("");
+        if (result == NULL) return NULL;
         struct lb_string * tmp;
         bool isneg = n < 0;
         while (n != 0) {
                 tmp = init_utstring(&ONESLIST[n % NUMBASE], 1);
-                put_in_string(result, 0, tmp);
-                free(tmp);
+                if (tmp == NULL) return NULL;
+                if (put_in_string(result, 0, tmp) == -1) {
+                        free_string(tmp);
+                        return NULL;
+                };
+                free_string(tmp);
                 n = n/10;
         };
         if (isneg) {
-                tmp = init_ntstring("-");
-                put_in_string(result, 0, tmp);
-                free(tmp);
+                tmp = init_ntstring(MINUSSTRING);
+                if (tmp == NULL) return NULL;
+                if (put_in_string(result, 0, tmp) == -1) {
+                        free_string(tmp);
+                        return NULL;
+                };
+                free_string(tmp);
         };
         return result;
 };

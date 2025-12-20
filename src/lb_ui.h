@@ -30,7 +30,7 @@
         //~ int (* handler)(char ** argv);
 //~ };
 
-int lb_line (char * dest, size_t row, char * front, char * mid, char * end);
-int lb_view_landing (struct lb_tty * tty);
+int format_line (struct lb_string * dest, struct lb_state * state, struct lb_string * front, struct lb_string * mid, struct lb_string * end);
+int view_landing (struct lb_state * state);
 
 #endif /* LB_UI_H */

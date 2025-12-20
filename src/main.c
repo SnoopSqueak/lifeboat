@@ -23,6 +23,8 @@ int main (int argc, char ** argv) {
         //~ printf("String val: |%s| length %lu\n", str1->ntstring, str1->ntsize);
         //~ put_in_string(str1, -1, str2);
         //~ printf("String val: |%s| length %lu\n", str1->ntstring, str1->ntsize);
-        
-        return lb_run(MAX_INPUT_LENGTH, TERM_ROWS, TERM_COLS);
+        size_t maxlinelength = MAX_INPUT_LENGTH;
+        size_t nrow = TERM_ROWS;
+        size_t ncol = TERM_COLS;
+        return lb_run(&maxlinelength, &nrow, &ncol);
 };

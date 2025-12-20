@@ -18,8 +18,8 @@ struct usrsig {
         size_t len;
 };
 
-int lb_run (size_t max_line_length, size_t num_of_lines, size_t num_of_cols);
-int lb_par_init (size_t * max_line_length, size_t * num_of_lines, size_t * num_of_cols);
+int lb_run (size_t * max_line_length, size_t * num_of_lines, size_t * num_of_cols);
+int lb_par_init (pid_t * chid, size_t * max_line_length, size_t * num_of_lines, size_t * num_of_cols);
 int lb_par_loop ();
 int lb_chld_loop ();
 void sig_handler (int signo, siginfo_t *info, void *context);
