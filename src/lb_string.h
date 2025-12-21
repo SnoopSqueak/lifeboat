@@ -27,13 +27,35 @@
 #define AS_RIGHT AS_C
 #define AS_LEFT AS_D
 
-#define LB_UP "\033[1A"
-#define LB_DOWN "\033[1B"
-#define LB_RIGHT "\033[1C"
-#define LB_LEFT "\033[1D"
-#define LB_ORIGIN "\033[1;1H"
-#define LB_CLEAR "\033[J"
-#define LB_NEWLINE "\033[13"
+// TODO: parse AC codes in format (CSI n A)
+// CSI is \033[
+// n is the color code (or other number)
+// A is the control code (m for color)
+#define AC_BLACK "\033[30m"
+#define AC_RED "\033[31m"
+#define AC_GREEN "\033[32m"
+#define AC_YELLOW "\033[33m"
+#define AC_BLUE "\033[34m"
+#define AC_MAGENTA "\033[35m"
+#define AC_CYAN "\033[36m"
+#define AC_WHITE "\033[37m"
+#define AC_BR_BLACK "\033[90m"
+#define AC_BR_RED "\033[91m"
+#define AC_BR_GREEN "\033[92m"
+#define AC_BR_YELLOW "\033[93m"
+#define AC_BR_BLUE "\033[94m"
+#define AC_BR_MAGENTA "\033[95m"
+#define AC_BR_CYAN "\033[96m"
+#define AC_BR_WHITE "\033[97m"
+#define AC_RESET "\033[0m"
+
+#define AC_UP "\033[1A"
+#define AC_DOWN "\033[1B"
+#define AC_RIGHT "\033[1C"
+#define AC_LEFT "\033[1D"
+#define AC_ORIGIN "\033[1;1H"
+#define AC_CLEAR "\033[J"
+#define AC_NEWLINE "\033[13"
 
 struct lb_string {
         char * ntstring;

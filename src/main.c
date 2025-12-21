@@ -16,13 +16,6 @@
 #define TERM_COLS 80
 
 int main (int argc, char ** argv) {
-        //~ struct lb_string * str1 = init_ntstring("This is a test.");
-        //~ struct lb_string * str2 = init_ntstring("AAHHH");
-        //~ printf("String val: |%s| length %lu\n", str1->ntstring, str1->ntsize);
-        //~ put_in_string(str1, 5, str2);
-        //~ printf("String val: |%s| length %lu\n", str1->ntstring, str1->ntsize);
-        //~ put_in_string(str1, -1, str2);
-        //~ printf("String val: |%s| length %lu\n", str1->ntstring, str1->ntsize);
         size_t maxlinelength = MAX_INPUT_LENGTH;
         size_t nrow = TERM_ROWS;
         size_t ncol = TERM_COLS;

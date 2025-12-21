@@ -71,14 +71,14 @@ int clear_tty_in (struct lb_tty * tty) {
 };
 
 int clear_tty_out (struct lb_tty * tty) {
-        struct lb_string * orig = init_ntstring(LB_ORIGIN);
+        struct lb_string * orig = init_ntstring(AC_ORIGIN);
         if (orig == NULL) {
                 errno = ENOMEM;
                 return -1;
         };
         if (put_to_tty_out(tty, orig) == -1) return -1;
         if (free_string(orig) == -1) return -1;
-        struct lb_string * clear = init_ntstring(LB_CLEAR);
+        struct lb_string * clear = init_ntstring(AC_CLEAR);
         if (clear == NULL) {
                 errno = ENOMEM;
                 return -1;

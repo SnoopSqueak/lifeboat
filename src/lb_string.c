@@ -41,6 +41,18 @@ ssize_t count_ntstring (char * ntstring) {
         return i;
 };
 
+ssize_t count_acstring (char * acstring) {
+        if (acstring == NULL) return -1;
+        size_t i = 0;
+        char c = acstring[i];
+        while (c != '\0') {
+                // 
+                i++;
+                c = acstring[i];
+        };
+        return i;
+};
+
 int grow_string (struct lb_string * string, size_t new_size) {
         if (string->maxsize > -1 && new_size > string->maxsize) {
                 errno = ERANGE;
