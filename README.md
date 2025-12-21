@@ -32,4 +32,6 @@ Clarity:
 
 This project was created in Geany, hence the .gch files.
 
+This project is using [Munit](https://nemequ.github.io/munit/#) by [nemequ](https://github.com/nemequ) for testing.
+
 Nothing is set in stone. Thank you for reading.
