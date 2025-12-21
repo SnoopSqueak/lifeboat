@@ -1,0 +1,23 @@
+#include "munit.h"
+#include "lb_units.h"
+
+static MunitResult test_munit_param (const MunitParameter params[], void * data) {
+        munit_assert_string_equal(data, "µnit");
+        return MUNIT_OK;
+};
+
+static const MunitTest test_suite_tests[] = {
+        {(char*) "/munit/param", test_munit_param, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+        {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}
+};
+
+static const MunitSuite other_suites[] = {
+        lb_unit_suite,
+        { NULL, NULL, NULL, 0, MUNIT_SUITE_OPTION_NONE }
+};
+
+static const MunitSuite test_suite = {(char*) "/lifeboat", test_suite_tests, other_suites, 1, MUNIT_SUITE_OPTION_NONE};
+
+int main(int argc, char* argv[MUNIT_ARRAY_PARAM(argc + 1)]) {
+        return munit_suite_main(&test_suite, (void*) "µnit", argc, argv);
+};
