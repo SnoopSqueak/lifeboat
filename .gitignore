@@ -2,3 +2,5 @@
 *.geany
 build/*
 build/LifeBoat
+tests/bin/*
+tests/build/fullsuite

@@ -34,14 +34,14 @@ struct lb_string * init_utstring (char * utstring, size_t nchar) {
         return str;
 };
 
-ssize_t count_ntstring (char * ntstring) {
+int count_ntstring (char * ntstring) {
         if (ntstring == NULL) return -1;
         size_t i = 0;
         while (ntstring[i] != '\0') i++;
         return i;
 };
 
-ssize_t count_acstring (char * acstring) {
+int count_acstring (char * acstring) {
         if (acstring == NULL) return -1;
         size_t i = 0;
         char c = acstring[i];
@@ -88,7 +88,7 @@ int shrink_string (struct lb_string * dest, size_t newsize) {
         return 0;
 };
 
-int put_in_string (struct lb_string * dest, ssize_t index, struct lb_string * src) {
+int put_in_string (struct lb_string * dest, int index, struct lb_string * src) {
         size_t siz = src->ntsize;
         if (siz == 0) return 0;
         if (index == -1) index = dest->ntsize - 1;
@@ -107,7 +107,7 @@ int put_in_string (struct lb_string * dest, ssize_t index, struct lb_string * sr
         return 0;
 };
 
-int take_from_string (struct lb_string * dest, size_t index, ssize_t count) {
+int take_from_string (struct lb_string * dest, size_t index, int count) {
         if (index >= dest->ntsize - 1 || count >= dest->ntsize) {
                 errno = ERANGE;
                 return -1;
@@ -127,7 +127,7 @@ int clear_string (struct lb_string * string) {
 };
 
 int char_to_int (char c, int * dest) {
-        ssize_t base = count_ntstring(ONESLIST);
+        int base = count_ntstring(ONESLIST);
         if (base == -1) return -1;
         if (c < AS_FIRSTNUM || c > AS_FIRSTNUM + base) {
                 errno = ERANGE;
@@ -143,7 +143,7 @@ bool is_minus_char (char c) {
 
 int string_to_int (struct lb_string * str, int * dest) {
         int total = 0;
-        ssize_t i = str->ntsize - 2;
+        int i = str->ntsize - 2;
         int * numptr = malloc(sizeof(int));
         bool isneg = false;
         size_t exp = 1;

@@ -60,16 +60,16 @@
 struct lb_string {
         char * ntstring;
         size_t ntsize;
-        ssize_t maxsize;
+        int maxsize;
 };
 
 struct lb_string * init_ntstring (char * ntstring);
 struct lb_string * init_utstring (char * utstring, size_t nchar);
-ssize_t count_ntstring (char * ntstring);
+int count_ntstring (char * ntstring);
 int grow_string (struct lb_string * str, size_t new_size);
 int shrink_string (struct lb_string * dest, size_t newsize);
-int put_in_string (struct lb_string * dest, ssize_t index, struct lb_string * src);
-int take_from_string (struct lb_string * dest, size_t index, ssize_t count);
+int put_in_string (struct lb_string * dest, int index, struct lb_string * src);
+int take_from_string (struct lb_string * dest, size_t index, int count);
 int clear_string (struct lb_string * string);
 int char_to_int (char c, int * dest);
 bool is_minus_char (char c);
