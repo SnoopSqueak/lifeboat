@@ -84,7 +84,7 @@ int shrink_string (struct lb_string * string, int newsize) {
                 return -1;
         };
         string->ntstring = realloc(string->ntstring, newsize);
-        if (string->ntstring == nullptr) {
+        if (string->ntstring == NULL) {
                 errno = ENOMEM;
                 return -1;
         };
@@ -216,6 +216,6 @@ struct lb_string * int_to_string (int n) {
 int free_string (struct lb_string ** str) {
         free((*str)->ntstring);
         free(*str);
-        *str = nullptr;
+        *str = NULL;
         return 0;
 };

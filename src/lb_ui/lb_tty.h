@@ -14,22 +14,23 @@
 struct lb_stream {
         struct lb_string * string;
         FILE * file;
-        size_t maxsize;
+        int fileno;
+        int maxsize;
 };
 
 struct lb_tty {
-        size_t curi;
+        int curi;
         struct lb_stream * ins;
         struct lb_stream * outs;
         struct termios * attr;
         struct termios * attrcpy;
-        size_t nrow;
-        size_t ncol;
+        int nrow;
+        int ncol;
 };
 
-struct lb_stream * init_stream (FILE * file, size_t * maxsize);
+struct lb_stream * init_stream (FILE * file, int * fileno, int * maxsize);
 int free_stream (struct lb_stream * stream);
-struct lb_tty * init_tty (FILE * fin, size_t * lin, FILE * fout, size_t * lout, size_t * nrow, size_t * ncol);
+struct lb_tty * init_tty (FILE * fin, int * linno, int * lin, FILE * fout, int * foutno, int * lout, int * nrow, int * ncol);
 int free_tty (struct lb_tty * tty);
 int clear_tty_in (struct lb_tty * tty);
 int clear_tty_out (struct lb_tty * tty);

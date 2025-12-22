@@ -1,6 +1,6 @@
 #include "lb_tty.h"
 
-struct lb_stream * init_stream (FILE * file, size_t * maxsize) {
+struct lb_stream * init_stream (FILE * file, int * fileno, int * maxsize) {
         struct lb_stream * stream = malloc(sizeof(struct lb_stream));
         if (stream == NULL) {
                 errno = ENOMEM;
@@ -17,20 +17,20 @@ struct lb_stream * init_stream (FILE * file, size_t * maxsize) {
 };
 
 int free_stream (struct lb_stream * stream) {
-        if (free_string(stream->string) == -1) return -1;
+        if (free_string(&stream->string) == -1) return -1;
         free(stream);
         return 0;
 };
 
-struct lb_tty * init_tty (FILE * fin, size_t * lin, FILE * fout, size_t * lout, size_t * nrow, size_t * ncol) {
+struct lb_tty * init_tty (FILE * fin, int * finno, int * lin, FILE * fout, int * foutno, int * lout, int * nrow, int * ncol) {
         size_t termsize = sizeof(struct termios);
         struct lb_tty * tty = malloc(sizeof(struct lb_tty));
         if (tty == NULL) {
                 errno = ENOMEM;
                 return NULL;
         };
-        tty->ins = init_stream(fin, lin);
-        tty->outs = init_stream(fout, lout);
+        tty->ins = init_stream(fin, finno, lin);
+        tty->outs = init_stream(fout, foutno, lout);
         tty->attr = malloc(termsize);
         tty->attrcpy = malloc(termsize);
         if (tty->ins == NULL || tty->outs == NULL || tty->attr == NULL || tty->attrcpy == NULL) {
@@ -43,19 +43,19 @@ struct lb_tty * init_tty (FILE * fin, size_t * lin, FILE * fout, size_t * lout, 
         tty->nrow = *nrow;
         tty->ncol = *ncol;
         setvbuf(fout, NULL, _IONBF, BUFSIZ);
-        tcgetattr(fileno(fout), tty->attr);
+        tcgetattr(*foutno, tty->attr);
         memcpy(tty->attrcpy, tty->attr, termsize);
         tty->attr->c_lflag &= (ECHO | ISIG);
         tty->attr->c_lflag &= ~(ICANON);
         //~ tty->attr->c_lflag &= (ISIG);
         //~ tty->attr->c_lflag &= ~(ECHO | ICANON);
-        tcsetattr(fileno(fout), TCSADRAIN, tty->attr);
+        tcsetattr(*foutno, TCSADRAIN, tty->attr);
         return tty;
 };
 
 int free_tty (struct lb_tty * tty) {
         bool tripped = false;
-        tcsetattr(fileno(tty->outs->file), TCSADRAIN, tty->attrcpy);
+        tcsetattr(tty->outs->fileno, TCSADRAIN, tty->attrcpy);
         if (free_stream(tty->ins) == -1) tripped = true;
         if (free_stream(tty->outs) == -1) tripped = true;
         free(tty->attr);
@@ -77,21 +77,21 @@ int clear_tty_out (struct lb_tty * tty) {
                 return -1;
         };
         if (put_to_tty_out(tty, orig) == -1) return -1;
-        if (free_string(orig) == -1) return -1;
+        if (free_string(&orig) == -1) return -1;
         struct lb_string * clear = init_ntstring(AC_CLEAR);
         if (clear == NULL) {
                 errno = ENOMEM;
                 return -1;
         };
         if (put_to_tty_out(tty, clear) == -1) return -1;
-        if (free_string(clear) == -1) return -1;
+        if (free_string(&clear) == -1) return -1;
         if (clear_string(tty->outs->string) == -1) return -1;
         return 0;
 };
 
 int put_to_tty_out (struct lb_tty * tty, struct lb_string * string) {
         if (put_in_string(tty->outs->string, -1, string) == -1) return -1;
-        write(fileno(tty->outs->file), tty->outs->string->ntstring, tty->outs->string->ntsize);
+        write(tty->outs->fileno, tty->outs->string->ntstring, tty->outs->string->ntsize);
         return 0;
 };
 
@@ -129,7 +129,7 @@ int get_tty_in_line (struct lb_tty * tty) {
         if (clear_tty_in(tty) == -1) return -1;
         struct lb_string * tmp;
         while (true) {
-                nbytes = read(fileno(tty->ins->file), tbuf, len);
+                nbytes = read(tty->ins->fileno, tbuf, len);
                 if (nbytes < 0 && errno != EINTR) return -1;
                 ti = 0;
                 while (ti < nbytes) {
@@ -142,7 +142,7 @@ int get_tty_in_line (struct lb_tty * tty) {
                                                         return -1;
                                                 };
                                                 if (put_to_tty_in(tty, tmp) == -1) return -1;
-                                                free_string(tmp);
+                                                free_string(&tmp);
                                                 esc = false;
                                         } else {
                                                 esc = true;
@@ -159,7 +159,7 @@ int get_tty_in_line (struct lb_tty * tty) {
                                                 return -1;
                                         };
                                         if (put_to_tty_in(tty, tmp) == -1) return -1;
-                                        free_string(tmp);
+                                        free_string(&tmp);
                                 break;
                         };
                 };

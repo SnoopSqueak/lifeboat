@@ -1,4 +1,4 @@
-#include "lb_ui.h"
+#include "lb_view.h"
 
 int format_line (struct lb_string * dest, struct lb_state * state, struct lb_string * front, struct lb_string * mid, struct lb_string * end) {
         size_t flen = 0;
@@ -44,7 +44,7 @@ int format_line (struct lb_string * dest, struct lb_state * state, struct lb_str
                         mi++;
                         i++;
                 };
-                free_string(tmp);
+                free_string(&tmp);
         };
         tmp = init_ntstring(" ");
         if (tmp == NULL) return -1;
@@ -61,13 +61,13 @@ int format_line (struct lb_string * dest, struct lb_state * state, struct lb_str
                         i++;
                 };
         };
-        free_string(tmp);
+        free_string(&tmp);
         tmp = init_ntstring("\n");
         if (tmp == NULL) return -1;
         if (put_in_string(dest, -1, tmp) == -1) return -1;
-        free_string(tmp);
+        free_string(&tmp);
         return 0;
-}
+};
 
 int view_landing(struct lb_state * state) {
         clear_tty_out(state->tty);
@@ -81,10 +81,10 @@ int view_landing(struct lb_state * state) {
         if (lines == NULL || front == NULL || mid == NULL || end == NULL) return -1;
         if (format_line(lines, state, front, mid, end) == -1) return -1;
         if (put_to_tty_out(state->tty, lines) == -1) return -1;
-        free_string(front);
-        free_string(mid);
-        free_string(end);
-        free_string(lines);
+        free_string(&front);
+        free_string(&mid);
+        free_string(&end);
+        free_string(&lines);
         
         //char * lines = calloc((tty->ncol + 1) * tty->nrow, sizeof(char));
         //~ errors += lb_line(lines, 0, lb_name(), AC_BR_BLACK "status: offline" AC_RESET, lb_version());
@@ -100,4 +100,4 @@ int view_landing(struct lb_state * state) {
         //~ free(lines);
         //~ free(left);
         return 0;
-}
+};

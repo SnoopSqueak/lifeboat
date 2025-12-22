@@ -1,6 +1,17 @@
 #ifndef LB_MAIN_H
 #define LB_MAIN_H
 
+/* Standard file descriptors.  */
+#ifndef STDIN_FILENO
+#define	STDIN_FILENO	0
+#endif
+#ifndef STDOUT_FILENO
+#define	STDOUT_FILENO	1
+#endif
+#ifndef STDERR_FILENO
+#define	STDERR_FILENO	2
+#endif
+
 #include "lb_ui/lb_state.h"
 #include "lb_ui/lb_tty.h"
 #include "lb_ui/lb_view.h"

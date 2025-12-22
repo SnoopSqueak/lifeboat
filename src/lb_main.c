@@ -9,10 +9,7 @@ int lb_run (int * maxlinelength, int * nrow, int * ncol) {
         
         if (lb_par_init(&chid, maxlinelength, nrow, ncol) == -1) return -1;
         int res = lb_par_loop();
-        if (res != 0) {
-                printf("Unexpected error: %s. Exiting " SOFTWARE_NAME ".\n", strerror(errno));
-                exit_handler(SI_USER);
-        };
+        if (res != 0) printf("Unexpected error: %s. Exiting " SOFTWARE_NAME ".\n", strerror(errno));
         free_tty(state->tty);
         free(state);
         return res;
@@ -24,24 +21,26 @@ int lb_par_init (int * chid, int * maxlinelength, int * nrow, int * ncol) {
         state->swname = SOFTWARE_NAME;
         state->swvers = SOFTWARE_VERSION;
         int maxoutlength = *maxlinelength * *nrow;
-        state->tty = init_tty(stdin, maxlinelength, stdout, &maxoutlength, nrow, ncol);
+        int inno = STDIN_FILENO;
+        int outno = STDOUT_FILENO;
+        state->tty = init_tty(stdin, maxlinelength, &inno, stdout, &outno, &maxoutlength, nrow, ncol);
         
-        struct sigaction exitact;
-        exitact.sa_flags = SA_SIGINFO;
-        exitact.sa_handler = &exit_handler;
-        if (sigaction(SIGSEGV, &exitact, NULL) == -1) return -1;
-        if (sigaction(SIGTERM, &exitact, NULL) == -1) return -1;
-        if (sigaction(SIGABRT, &exitact, NULL) == -1) return -1;
-        if (sigaction(SIGILL, &exitact, NULL) == -1) return -1;
+        //~ struct sigaction exitact;
+        //~ exitact.sa_flags = SA_SIGINFO;
+        //~ exitact.sa_handler = &exit_handler;
+        //~ if (sigaction(SIGSEGV, &exitact, NULL) == -1) return -1;
+        //~ if (sigaction(SIGTERM, &exitact, NULL) == -1) return -1;
+        //~ if (sigaction(SIGABRT, &exitact, NULL) == -1) return -1;
+        //~ if (sigaction(SIGILL, &exitact, NULL) == -1) return -1;
         
-        struct sigaction intsigact;
-        intsigact.sa_handler = &intr_handler;
-        if (sigaction(SIGINT, &intsigact, NULL) == -1) return -1;
+        //~ struct sigaction intsigact;
+        //~ intsigact.sa_handler = &intr_handler;
+        //~ if (sigaction(SIGINT, &intsigact, NULL) == -1) return -1;
         
-        struct sigaction usract;
-        usract.sa_flags = SA_SIGINFO;
-        usract.sa_sigaction = &sig_handler;
-        if (sigaction(SIGUSR1, &usract, NULL) == -1) return -1;
+        //~ struct sigaction usract;
+        //~ usract.sa_flags = SA_SIGINFO;
+        //~ usract.sa_sigaction = &sig_handler;
+        //~ if (sigaction(SIGUSR1, &usract, NULL) == -1) return -1;
         return 0;
 };
 
@@ -57,8 +56,8 @@ int lb_par_loop () {
 
 int lb_chld_loop () {
         int ppid = getppid();
-        union sigval sv;
-        sv.sival_ptr = "Hello, parent!";
+        //~ union sigval sv;
+        //~ sv.sival_ptr = "Hello, parent!";
         while (true) {
                 sleep(2);
                 //~ sigqueue(ppid, SIGUSR1, sv);
@@ -77,5 +76,5 @@ void intr_handler (int code) {
 };
 
 void exit_handler (int code) {
-        if (state->chid != 0) kill(state->chid, SIGKILL);
+        //~ if (state->chid != 0) kill(state->chid, SIGKILL);
 };
