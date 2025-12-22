@@ -1,9 +1,11 @@
 CSTD:=99
-CFLAGS:=-I "../../../src"
+PDIR=../../..
+CFLAGS:=-I $(PDIR)/src
 CC=cc
 srcs:=$(wildcard *.c)
 objs:=$(patsubst %.c,%.o,$(srcs))
 bins:=$(patsubst %.c,%,$(srcs))
+OBJ=../../build
 
 ifeq ($(CC),pgcc)
         CFLAGS += -c$(CSTD)
@@ -14,21 +16,20 @@ endif
 .PHONY: all
 all: $(bins)
 
-$(bins) : $(objs) ../munit.o
-	$(CC) $(CFLAGS) -o $@ $< ../munit.o
+$(bins) : $(OBJ)/$(objs) $(OBJ)/munit.o
+	$(CC) $(CFLAGS) -o $@ $< $(OBJ)/munit.o
 
-../munit.o : ../munit.c
-	$(CC) $(CFLAGS) -c ../munit.c -o ../munit.o
+$(OBJ)/munit.o : ../munit.c
+	$(CC) $(CFLAGS) -c ../munit.c -o $(OBJ)/munit.o
 
-%.o : %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+$(OBJ)/%.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $(OBJ)/$@
 	
-string : test_lb_string.o ../munit.o
-	$(CC) $(CFLAGS) -c test_lb_string.c -o test_lb_string.o
-	$(CC) $(CFLAGS) -o tl_string test_lb_string.o ../munit.o ../../../build/lb_string.o
+string : $(OBJ)/test_lb_string.o $(OBJ)/munit.o
+	$(CC) $(CFLAGS) -c test_lb_string.c -o $(OBJ)/test_lb_string.o
+	$(CC) $(CFLAGS) -o tl_string $(OBJ)/test_lb_string.o $(OBJ)/munit.o $(PDIR)/build/lb_string.o
 
 .PHONY: clean
 clean :
-	rm -rf ./*.o
-	rm -rf ../munit.o
+	rm -rf $(OBJ)/*.o
 	rm -rf ./tl_string ./test_lb_string

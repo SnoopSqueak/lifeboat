@@ -7,7 +7,7 @@ struct lb_state {
         char * swname;
         char * swvers;
         struct lb_tty * tty;
-        pid_t chid;
+        int chid;
 };
 
 #endif /* LB_STATE_H */

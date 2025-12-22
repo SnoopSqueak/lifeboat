@@ -16,8 +16,8 @@
 #define TERM_COLS 80
 
 int main (int argc, char ** argv) {
-        size_t maxlinelength = MAX_INPUT_LENGTH;
-        size_t nrow = TERM_ROWS;
-        size_t ncol = TERM_COLS;
+        int maxlinelength = MAX_INPUT_LENGTH;
+        int nrow = TERM_ROWS;
+        int ncol = TERM_COLS;
         return lb_run(&maxlinelength, &nrow, &ncol);
 };

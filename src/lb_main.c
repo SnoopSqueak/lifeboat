@@ -2,8 +2,8 @@
 
 static struct lb_state * state = NULL;
 
-int lb_run (size_t * maxlinelength, size_t * nrow, size_t * ncol) {
-        pid_t chid = fork();
+int lb_run (int * maxlinelength, int * nrow, int * ncol) {
+        int chid = fork();
         if (chid == -1) return EXIT_FAILURE;
         if (chid == 0) return lb_chld_loop();
         
@@ -18,12 +18,12 @@ int lb_run (size_t * maxlinelength, size_t * nrow, size_t * ncol) {
         return res;
 };
 
-int lb_par_init (pid_t * chid, size_t * maxlinelength, size_t * nrow, size_t * ncol) {
+int lb_par_init (int * chid, int * maxlinelength, int * nrow, int * ncol) {
         state = malloc(sizeof(struct lb_state));
         state->chid = *chid;
         state->swname = SOFTWARE_NAME;
         state->swvers = SOFTWARE_VERSION;
-        size_t maxoutlength = *maxlinelength * *nrow;
+        int maxoutlength = *maxlinelength * *nrow;
         state->tty = init_tty(stdin, maxlinelength, stdout, &maxoutlength, nrow, ncol);
         
         struct sigaction exitact;
@@ -61,16 +61,16 @@ int lb_chld_loop () {
         sv.sival_ptr = "Hello, parent!";
         while (true) {
                 sleep(2);
-                sigqueue(ppid, SIGUSR1, sv);
+                //~ sigqueue(ppid, SIGUSR1, sv);
         };
         return 0;
 };
 
-void sig_handler (int signo, siginfo_t *info, void *context) {
-        if (signo != SIGUSR1) return;
+//~ void sig_handler (int signo, siginfo_t *info, void *context) {
+        //~ if (signo != SIGUSR1) return;
         //~ printf("\nChild said: %s\n", (char *)(info->si_value.sival_ptr));
         //~ printf("\nChild said: %i\n", info->si_value.sival_int);
-};
+//~ };
 
 void intr_handler (int code) {
         exit(EXIT_SUCCESS);
