@@ -1,13 +1,9 @@
 CSTD:=99
-CFLAGS:=-MMD
+CFLAGS:=
 CC=cc
-
-SRC=src
-OBJ=build
+SRC=$(shell find src -iname '*.c')
+OBJ=$(patsubst src/%.c,build/%.o,$(SRC))
 TARGET=LifeBoat
-sources:=$(shell find src -name '*.c')
-objs:=$(patsubst $(SRC)/%.c,$(OBJ)/%.o,$(sources))
-deps:=$(OBJ)/main.d
 
 ifeq ($(CC),pgcc)
         CFLAGS += -c$(CSTD)
@@ -16,21 +12,20 @@ else
 endif
 
 .PHONY: all
-all: $(TARGET)
+all : $(TARGET)
 
-info:
-	echo $(sources)
-	echo $(objs)
+.PHONY: info
+info :
+	echo "$(SRC)"
+	echo "$(OBJ)"
 
-$(TARGET) : $(objs)
-	$(CC) $(CFLAGS) -o $(TARGET) $(objs)
+$(TARGET) : $(OBJ)
+	$(CC) $(CFLAGS) $(OBJ) -o $(TARGET)
 	
-build/%.o : src/%.c
-	$(CC) $(CFLAGS) -c $< -o $@ 
+build/%.o: src/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
 	
-.PHONY: clean
+.PHONY : clean
 clean :
-	rm -rf $(objs)
+	rm -rf $(OBJ)
 	rm -rf $(TARGET)
-
--include $(deps)

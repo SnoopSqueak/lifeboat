@@ -1,9 +1,14 @@
 CSTD:=99
 CFLAGS:=
 CC=cc
-SRC = ./src
-BLD = ./build
-BIN = ./bin
+SRC = src
+BLD = build
+$(shell echo test)
+TARGET=TestFullSuite
+sources:=$(shell find src -name '*.c')
+objs:=$(patsubst $(SRC)/%.c,$(OBJ)/%.o,$(sources))
+$(shell $(CC) $(CFLAGS) -MMD -c src/main.c -o build/main.o)
+deps:=$(OBJ)/main.d
 
 UNITSRCS = $(wildcard $(SRC)/unit/*.c)
 
