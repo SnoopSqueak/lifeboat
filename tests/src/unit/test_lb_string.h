@@ -30,6 +30,7 @@ static MunitResult test_initut (const MunitParameter params[], void * data) {
 
 static MunitResult test_count (const MunitParameter params[], void * data) {
         munit_assert_int(count_ntstring("Hello, world!"), ==, 13);
+        munit_assert_int(count_ntstring(""), ==, 0);
         return MUNIT_OK;
 };
 
@@ -172,6 +173,6 @@ static MunitTest lb_string_tests[] = {
         {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}
 };
 
-static MunitSuite lb_string_suite = {(char*) "/lb_string", lb_string_tests, NULL, 1, MUNIT_SUITE_OPTION_NONE};
+static const MunitSuite lb_string_suite = {(char*) "/lb_string", lb_string_tests, NULL, 1, MUNIT_SUITE_OPTION_NONE};
 
 #endif /* TEST_LB_STRING_H */

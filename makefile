@@ -19,13 +19,17 @@ info :
 	echo "$(SRC)"
 	echo "$(OBJ)"
 
-$(TARGET) : $(OBJ)
+$(TARGET) : build/ $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $(TARGET)
 	
 build/%.o: src/%.c
+	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
+	
+build/ :
+	mkdir build
 	
 .PHONY : clean
 clean :
-	rm -rf $(OBJ)
+	rm -rf build/
 	rm -rf $(TARGET)

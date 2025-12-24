@@ -1,18 +1,16 @@
 CSTD:=99
-CFLAGS:=
+PDIR:=..
 CC=cc
-SRC = src
-BLD = build
-$(shell echo test)
+build=build
+source=src
+CFLAGS:=-I $(source)
 TARGET=TestFullSuite
-sources:=$(shell find src -name '*.c')
-objs:=$(patsubst $(SRC)/%.c,$(OBJ)/%.o,$(sources))
-$(shell $(CC) $(CFLAGS) -MMD -c src/main.c -o build/main.o)
-deps:=$(OBJ)/main.d
-
-UNITSRCS = $(wildcard $(SRC)/unit/*.c)
-
-TESTS_BIN = $(patsubst $(SRC)/unit/%.c,$(BIN)/%.o,$(UNITSRCS))
+psource=../src
+PSRC=$(psource)/lb_ui/lb_string.c
+pbuild=../build
+POBJ=$(patsubst $(psource)/%.c,$(pbuild)/%.o,$(PSRC))
+SRC=$(source)/munit.c $(source)/lb_fullsuite.c $(source)/lb_units.h $(source)/unit/test_lb_string.h
+OBJ=$(patsubst $(source)/%.c,$(build)/%.o,$(SRC))
 
 ifeq ($(CC),pgcc)
         CFLAGS += -c$(CSTD)
@@ -20,19 +18,30 @@ else
         CFLAGS += -std=c$(CSTD)
 endif
 
-.PHONY: all
-all: $(BLD)/fullsuite
+.PHONY : all
+all : $(TARGET)
 
-$(BLD)/fullsuite : $(BIN)/munit.o $(BIN)/lb_fullsuite.o $(TESTS_BIN)
-	$(CC) $(CFLAGS) -o $(BLD)/fullsuite $(BIN)/munit.o $(BIN)/lb_fullsuite.o
+$(TARGET) : $(build)/ $(OBJ) $(POBJ)
+	$(CC) $(CFLAGS) $(OBJ) $(POBJ) -o $@
 	
-$(TESTS_BIN) : $(UNITSRCS)
+$(build)/munit.o : $(source)/munit.c
+	$(CC) $(CFLAGS) -c $(source)/munit.c -o $(build)/munit.o
+	
+$(build)/%.o: $(source)/%.c
+	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 	
-$(BIN)/%.o : $(SRC)/%.c
+$(build)/lb_ui/%.o: $(source)/unit/%.c
+	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
-
-.PHONY: clean
+	
+$(build)/lb_ui/ :
+	mkdir -p $(build)/lb_ui
+	
+$(build)/ :
+	mkdir -p $(build)
+	
+.PHONY : clean
 clean :
-	rm -rf $(BIN)/*.o
-	rm -rf $(BLD)/fullsuite
+	rm -rf $(TARGET)
+	rm -rf $(build)

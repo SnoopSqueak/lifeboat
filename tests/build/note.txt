@@ -1,5 +1,0 @@
-If I leave this folder empty, I can't commit it to git.
-
-This is like a .keep file, but more informative. Howdy!
-
-Thanks for checking out my project. Trust nothing and no one.

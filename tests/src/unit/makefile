@@ -1,11 +1,10 @@
 CSTD:=99
-PDIR=../../..
-CFLAGS:=-I $(PDIR)/src
+PDIR:=../../..
 CC=cc
-srcs:=$(wildcard *.c)
-objs:=$(patsubst %.c,%.o,$(srcs))
-bins:=$(patsubst %.c,%,$(srcs))
-OBJ=../../build
+build=../../build
+source=..
+pbuild=$(PDIR)/build
+CFLAGS:=-I $(source)
 
 ifeq ($(CC),pgcc)
         CFLAGS += -c$(CSTD)
@@ -13,24 +12,25 @@ else
         CFLAGS += -std=c$(CSTD)
 endif
 
-.PHONY: all
-all: $(bins)
-
-$(bins) : $(OBJ)/$(objs) $(OBJ)/munit.o
-	$(CC) $(CFLAGS) -o $@ $< $(OBJ)/munit.o
-
-$(OBJ)/munit.o : ../munit.c
-	$(CC) $(CFLAGS) -c ../munit.c -o $(OBJ)/munit.o
-
-$(OBJ)/%.o : %.c
-	$(CC) $(CFLAGS) -c $< -o $(OBJ)/$@
+.PHONY : all
+all : string
 	
-.PHONY: string
-string : $(OBJ)/test_lb_string.o $(OBJ)/munit.o
-	$(CC) $(CFLAGS) -c test_lb_string.c -o $(OBJ)/test_lb_string.o
-	$(CC) $(CFLAGS) -o tl_string $(OBJ)/test_lb_string.o $(OBJ)/munit.o $(PDIR)/build/lb_string.o
+$(build)/lb_ui/%.o: $(source)/unit/%.c
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: clean
+$(build)/munit.o : $(source)/munit.c
+	$(CC) $(CFLAGS) -c $(source)/munit.c -o $(build)/munit.o
+	
+$(build)/ :
+	mkdir -p $(build)
+	
+.PHONY : string
+string : $(build)/ $(build)/lb_ui/test_lb_string.o $(build)/munit.o
+	$(CC) $(CFLAGS) -c test_lb_string.c -o $(build)/lb_ui/test_lb_string.o
+	$(CC) $(CFLAGS) $(build)/lb_ui/test_lb_string.o $(build)/munit.o $(pbuild)/lb_ui/lb_string.o -o test_lb_string
+
+.PHONY : clean
 clean :
-	rm -rf $(OBJ)/*.o
-	rm -rf ./tl_string ./test_lb_string
+	rm -rf ./test_lb_string
+	rm -rf $(build)
