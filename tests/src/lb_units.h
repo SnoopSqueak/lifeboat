@@ -3,9 +3,11 @@
 
 #include "munit.h"
 #include "unit/test_lb_string.h"
+#include "unit/test_lb_tty.h"
 
 static MunitSuite lb_unit_suites[] = {
         lb_string_suite,
+        lb_tty_suite,
         { NULL, NULL, NULL, 0, MUNIT_SUITE_OPTION_NONE }
 };
 

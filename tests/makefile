@@ -6,10 +6,10 @@ source=src
 CFLAGS:=-I $(source)
 TARGET=TestFullSuite
 psource=../src
-PSRC=$(psource)/lb_ui/lb_string.c
+PSRC=$(psource)/lb_ui/lb_string.c $(psource)/lb_ui/lb_tty.c
 pbuild=../build
 POBJ=$(patsubst $(psource)/%.c,$(pbuild)/%.o,$(PSRC))
-SRC=$(source)/munit.c $(source)/lb_fullsuite.c $(source)/lb_units.h $(source)/unit/test_lb_string.h
+SRC=$(source)/munit.c $(source)/lb_fullsuite.c $(source)/lb_units.h $(source)/unit/test_lb_string.h $(source)/unit/test_lb_tty.h
 OBJ=$(patsubst $(source)/%.c,$(build)/%.o,$(SRC))
 
 ifeq ($(CC),pgcc)

@@ -41,18 +41,6 @@ int count_ntstring (char * ntstring) {
         return i;
 };
 
-//~ int count_acstring (char * acstring) {
-        //~ if (acstring == NULL) return -1;
-        //~ size_t i = 0;
-        //~ char c = acstring[i];
-        //~ while (c != '\0') {
-                //~ // 
-                //~ i++;
-                //~ c = acstring[i];
-        //~ };
-        //~ return i;
-//~ };
-
 int grow_string (struct lb_string * string, int new_size) {
         if (string->maxsize > -1 && new_size > string->maxsize) {
                 errno = ERANGE;
@@ -113,18 +101,17 @@ int put_in_string (struct lb_string * dest, int index, struct lb_string * src) {
 };
 
 int take_from_string (struct lb_string * dest, int index, int count) {
-        if (index >= dest->ntsize || (count >= dest->ntsize)) {
+        if (count == -1) count = dest->ntsize - index - 1;
+        if (index > dest->ntsize - 1 || count > dest->ntsize - 1 - index || index < 0) {
                 errno = ERANGE;
                 return -1;
         };
         if (count == 0) return 0;
-        if (count == -1) {
-                if (dest->ntsize <= 1) return 0;
-                count = dest->ntsize - index - 1;
-        };
         int c = 0;
-        while (index + c + count < dest->ntsize) {
-                dest->ntstring[index + c] = dest->ntstring[index + c + count];
+        while (c < dest->ntsize - 1) {
+                if (index + c + count < dest->ntsize) {
+                        dest->ntstring[index + c] = dest->ntstring[index + c + count];
+                };
                 c++;
         };
         if (shrink_string(dest, dest->ntsize - count) == -1) return -1;

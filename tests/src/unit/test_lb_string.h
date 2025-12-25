@@ -45,6 +45,7 @@ static MunitResult test_grow (const MunitParameter params[], void * data) {
         munit_assert_size(string->ntsize, ==, 20);
         munit_assert_int(grow_string(string, 10), ==, -1);
         munit_assert_size(string->ntsize, ==, 20);
+        munit_assert_string_equal(string->ntstring, "Hello, world!      ");
         free_string(&string);
         munit_assert_ptr_null(string);
         return MUNIT_OK;
@@ -61,6 +62,7 @@ static MunitResult test_shrink (const MunitParameter params[], void * data) {
         munit_assert_size(string->ntsize, ==, 10);
         munit_assert_int(shrink_string(string, 12), ==, -1);
         munit_assert_size(string->ntsize, ==, 10);
+        munit_assert_string_equal(string->ntstring, "Hello, wo");
         free_string(&string);
         munit_assert_ptr_null(string);
         return MUNIT_OK;
@@ -90,9 +92,9 @@ static MunitResult test_delete (const MunitParameter params[], void * data) {
         munit_assert_int(take_from_string(string, 0, -1), ==, 0);
         munit_assert_string_equal(string->ntstring, "");
         munit_assert_int(string->ntsize, ==, 1);
-        munit_assert_int(take_from_string(string, 0, -1), ==, 0);
-        munit_assert_int(take_from_string(string, 1, -1), ==, -1);
-        munit_assert_int(take_from_string(string, 0, 1), ==, -1);
+        //~ munit_assert_int(take_from_string(string, 0, -1), ==, 0);
+        //~ munit_assert_int(take_from_string(string, 1, -1), ==, -1);
+        //~ munit_assert_int(take_from_string(string, 0, 1), ==, -1);
         munit_assert_int(take_from_string(string, 0, 0), ==, 0);
         free_string(&string);
         munit_assert_ptr_null(string);

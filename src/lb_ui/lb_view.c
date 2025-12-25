@@ -1,23 +1,23 @@
 #include "lb_view.h"
 
 int format_line (struct lb_string * dest, struct lb_state * state, struct lb_string * front, struct lb_string * mid, struct lb_string * end) {
-        size_t flen = 0;
-        size_t mlen = 0;
-        size_t elen = 0;
+        int flen = 0;
+        int mlen = 0;
+        int elen = 0;
         if (front != NULL) flen = front->ntsize - 1;
         if (mid != NULL) mlen += mid->ntsize - 1;
         if (end != NULL) elen += end->ntsize - 1;
-        size_t len = flen + mlen + elen;
+        int len = flen + mlen + elen;
         struct lb_string * tmp;
-        size_t cc = state->tty->ncol;
+        int cc = state->tty->ncol;
         if (len > cc) {
                 errno = ERANGE;
                 return -1;
         }
-        size_t i = 0;
-        size_t mspace;
-        size_t mpad;
-        size_t mi;
+        int i = 0;
+        int mspace;
+        int mpad;
+        int mi;
         if (front != NULL) {
                 if (put_in_string(dest, -1, front) == -1) return -1;
                 i += flen;
