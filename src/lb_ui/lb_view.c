@@ -49,7 +49,6 @@ int format_line (struct lb_string * dest, struct lb_state * state, struct lb_str
         tmp = init_ntstring(" ");
         if (tmp == NULL) return -1;
         if (end != NULL) {
-                printf("%lu\n", cc - elen);
                 while (i < cc - elen) {
                         if (put_in_string(dest, -1, tmp) == -1) return -1;
                         i++;

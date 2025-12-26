@@ -1,40 +1,16 @@
 #ifndef LB_MAIN_H
 #define LB_MAIN_H
 
-/* Standard file descriptors.  */
-#ifndef STDIN_FILENO
-#define	STDIN_FILENO	0
-#endif
-#ifndef STDOUT_FILENO
-#define	STDOUT_FILENO	1
-#endif
-#ifndef STDERR_FILENO
-#define	STDERR_FILENO	2
-#endif
-
-#include "lb_ui/lb_state.h"
+#include "lb_state.h"
 #include "lb_ui/lb_tty.h"
 #include "lb_ui/lb_view.h"
+#include "lb_sysi/lb_threads.h"
 
-#include <signal.h>
-#include <stddef.h>
 #include <stdio.h>
 
 #define SOFTWARE_NAME "LifeBoat"
 #define SOFTWARE_VERSION "0.0.0"
 
-struct usrsig {
-        int code;
-        void * val;
-        int len;
-};
-
-int lb_run (int * max_line_length, int * num_of_lines, int * num_of_cols);
-int lb_par_init (int * chid, int * max_line_length, int * num_of_lines, int * num_of_cols);
-int lb_par_loop ();
-int lb_chld_loop ();
-//~ void sig_handler (int signo, siginfo_t *info, void *context);
-void intr_handler (int code);
-void exit_handler (int code);
+int lb_main (int * maxlinelength, int * nrow, int * ncol);
 
 #endif /* LB_MAIN_H */

@@ -57,21 +57,21 @@ static MunitResult test_input (const MunitParameter params[], void * data) {
         return MUNIT_OK;
 };
 
-static void * test_output_setup (const MunitParameter params[], void * fixture) {
+static void * setup_nonstd_out (const MunitParameter params[], void * data) {
         FILE * file = fopen("testout.txt", "r+");
         return (void *) file;
 };
 
-static void test_output_tear_down (void * fixture) {
-        fclose(fixture);
+static void tear_down_nonstd_out (void * data) {
+        fclose(data);
 };
 
-static MunitResult test_output (const MunitParameter params[], void * fixture) {
+static MunitResult test_output (const MunitParameter params[], void * data) {
         int maxsize = 64;
         int rows = 5;
         int cols = 4;
         char * tstring = "This is a test!";
-        struct lb_tty * tty = init_tty(stdin, &maxsize, (FILE *)fixture, &maxsize, &rows, &cols);
+        struct lb_tty * tty = init_tty(stdin, &maxsize, (FILE *)data, &maxsize, &rows, &cols);
         munit_assert_ptr_not_null(tty);
         struct lb_string * testput = init_ntstring(tstring);
         munit_assert_int(put_to_tty_out(tty, testput), ==, 0);
@@ -125,23 +125,53 @@ static MunitResult test_intake (const MunitParameter params[], void * data) {
         //~ return MUNIT_OK;
 //~ };
 
-//~ static MunitResult test_inclear (const MunitParameter params[], void * data) {
-        //~ return MUNIT_OK;
-//~ };
+static MunitResult test_inclear (const MunitParameter params[], void * data) {
+        int maxsize = 64;
+        int rows = 5;
+        int cols = 4;
+        char * tstring = "This is a test!";
+        struct lb_tty * tty = init_tty((FILE *)data, &maxsize, stdout, &maxsize, &rows, &cols);
+        munit_assert_ptr_not_null(tty);
+        struct lb_string * testput = init_ntstring(tstring);
+        munit_assert_int(put_to_tty_in(tty, testput), ==, 0);
+        munit_assert_string_equal(tty->ins->string->ntstring, tstring);
+        munit_assert_int(tty->ins->string->ntsize-1, ==, 15);
+        munit_assert_int(clear_tty_in(tty), ==, 0);
+        munit_assert_string_equal(tty->ins->string->ntstring, "");
+        munit_assert_int(tty->ins->string->ntsize, ==, 1);
+        free_tty(&tty);
+        munit_assert_ptr_null(tty);
+        return MUNIT_OK;
+};
 
-//~ static MunitResult test_outclear (const MunitParameter params[], void * data) {
-        //~ return MUNIT_OK;
-//~ };
+static MunitResult test_outclear (const MunitParameter params[], void * data) {
+        int maxsize = 64;
+        int rows = 5;
+        int cols = 4;
+        char * tstring = "This is a test!";
+        struct lb_tty * tty = init_tty(stdin, &maxsize, (FILE *)data, &maxsize, &rows, &cols);
+        munit_assert_ptr_not_null(tty);
+        struct lb_string * testput = init_ntstring(tstring);
+        munit_assert_int(put_to_tty_out(tty, testput), ==, 0);
+        munit_assert_string_equal(tty->outs->string->ntstring, tstring);
+        munit_assert_int(tty->outs->string->ntsize-1, ==, 15);
+        munit_assert_int(clear_tty_out(tty), ==, 0);
+        munit_assert_string_equal(tty->outs->string->ntstring, "");
+        munit_assert_int(tty->outs->string->ntsize, ==, 1);
+        free_tty(&tty);
+        munit_assert_ptr_null(tty);
+        return MUNIT_OK;
+};
 
 static MunitTest lb_tty_tests[] = {
         {(char*) "/init/stream", test_initstream, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
         {(char*) "/init/tty", test_inittty, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
         {(char*) "/in/put", test_input, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
-        {(char*) "/out/put", test_output, test_output_setup, test_output_tear_down, MUNIT_TEST_OPTION_NONE, NULL},
+        {(char*) "/out/put", test_output, setup_nonstd_out, tear_down_nonstd_out, MUNIT_TEST_OPTION_NONE, NULL},
         {(char*) "/in/take/delete", test_intake, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
         //~ {(char*) "/in/get", test_inget, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
-        //~ {(char*) "/in/clear", test_inclear, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
-        //~ {(char*) "/out/clear", test_outclear, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+        {(char*) "/in/clear", test_inclear, setup_nonstd_out, tear_down_nonstd_out, MUNIT_TEST_OPTION_NONE, NULL},
+        {(char*) "/out/clear", test_outclear, setup_nonstd_out, tear_down_nonstd_out, MUNIT_TEST_OPTION_NONE, NULL},
         {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}
 };
 

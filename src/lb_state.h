@@ -1,7 +1,7 @@
 #ifndef LB_STATE_H
 #define LB_STATE_H
 
-#include "lb_tty.h"
+#include "lb_ui/lb_tty.h"
 
 struct lb_state {
         char * swname;

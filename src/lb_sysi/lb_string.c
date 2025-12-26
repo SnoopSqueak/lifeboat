@@ -145,10 +145,6 @@ int char_to_int (char c, int * dest) {
         return 0;
 };
 
-bool is_minus_char (char c) {
-        return (c == MINUSSTRING[0]);
-};
-
 int string_to_int (struct lb_string * str, int * dest) {
         int total = 0;
         int i = str->ntsize - 2;
@@ -189,7 +185,8 @@ struct lb_string * int_to_string (int n) {
                 n = n/10;
         };
         if (isneg) {
-                tmp = init_ntstring(MINUSSTRING);
+                char m = get_minus_char();
+                tmp = init_ntstring(&m);
                 if (tmp == NULL) return NULL;
                 if (put_in_string(result, 0, tmp) == -1) {
                         free_string(&tmp);

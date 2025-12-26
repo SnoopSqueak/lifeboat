@@ -1,6 +1,5 @@
 *.o
-*.geany
 build/*
 build/LifeBoat
-tests/bin/*
-tests/build/fullsuite
+tests/build/*
+tests/build

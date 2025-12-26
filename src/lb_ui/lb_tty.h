@@ -1,7 +1,7 @@
 #ifndef LB_TTY_H
 #define LB_TTY_H
 
-#include "lb_string.h"
+#include "lb_sysi/lb_string.h"
 
 #include <errno.h>
 #include <stdarg.h>
