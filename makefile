@@ -3,7 +3,6 @@ CFLAGS:=-I src
 CC=cc
 SRC=main.c lb_main.c lb_sysi/lb_formio.c lb_sysi/lb_threads.c lb_sysi/lb_string.c lb_ui/lb_tty.c lb_ui/lb_view.c
 OBJ=$(patsubst %.c,build/%.o,$(SRC))
-modules:=lb_ui lb_sys
 TARGET=LifeBoat
 
 ifeq ($(CC),pgcc)
@@ -21,9 +20,6 @@ $(TARGET) : build/ $(OBJ)
 build/%.o: src/%.c
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
-	
-# build/$(modules)/ :
-# 	@mkdir $@
 	
 build/ :
 	mkdir build

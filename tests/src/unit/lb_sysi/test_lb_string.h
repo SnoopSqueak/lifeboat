@@ -2,7 +2,7 @@
 #define TEST_LB_STRING_H
 
 #include "../munit.h"
-#include "../../../src/lb_ui/lb_string.h"
+#include "../../../src/lb_sysi/lb_string.h"
 
 static MunitResult test_initnt (const MunitParameter params[], void * data) {
         struct lb_string * string = init_ntstring("Hello, world!");

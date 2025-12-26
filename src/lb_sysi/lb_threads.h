@@ -15,5 +15,6 @@ struct lbt_item {
 int init_lbthreads ();
 int lb_fork (int * chid, int (* chld_func) (void));
 int lb_raise (int lbtid, int sig);
+int free_thread (int lbtid);
 
 #endif /* LB_THREADS_H */
