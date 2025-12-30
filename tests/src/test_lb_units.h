@@ -2,8 +2,8 @@
 #define TEST_LB_UNITS_H
 
 #include "munit.h"
-#include "unit/test_lb_string.h"
-#include "unit/test_lb_tty.h"
+#include "test_lb_sysi/test_lb_string.h"
+#include "test_lb_ui/test_lb_tty.h"
 
 static MunitSuite lb_unit_suites[] = {
         lb_string_suite,

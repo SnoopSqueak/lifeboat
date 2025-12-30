@@ -1,11 +1,13 @@
 #ifndef TEST_LB_TTY_H
 #define TEST_LB_TTY_H
 
-#include "../munit.h"
-#include "../../../src/lb_ui/lb_string.h"
-#include "../../../src/lb_ui/lb_tty.h"
+#include "munit.h"
+#include "lb_sysi/lb_string.h"
+#include "lb_ui/lb_tty.h"
 
 #include <stdio.h>
+
+const char * outpath = "testout.txt";
 
 static MunitResult test_initstream (const MunitParameter params[], void * data) {
         int maxsize = 64;
@@ -58,7 +60,7 @@ static MunitResult test_input (const MunitParameter params[], void * data) {
 };
 
 static void * setup_nonstd_out (const MunitParameter params[], void * data) {
-        FILE * file = fopen("testout.txt", "r+");
+        FILE * file = fopen(outpath, "r+");
         return (void *) file;
 };
 

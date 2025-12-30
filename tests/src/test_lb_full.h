@@ -1,5 +1,5 @@
 #include "munit.h"
-#include "lb_units.h"
+#include "test_lb_units.h"
 
 static MunitResult test_munit_param (const MunitParameter params[], void * data) {
         munit_assert_string_equal(data, "µnit");

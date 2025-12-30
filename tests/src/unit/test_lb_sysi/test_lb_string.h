@@ -1,8 +1,8 @@
 #ifndef TEST_LB_STRING_H
 #define TEST_LB_STRING_H
 
-#include "../munit.h"
-#include "../../../src/lb_sysi/lb_string.h"
+#include "munit.h"
+#include "lb_sysi/lb_string.h"
 
 static MunitResult test_initnt (const MunitParameter params[], void * data) {
         struct lb_string * string = init_ntstring("Hello, world!");

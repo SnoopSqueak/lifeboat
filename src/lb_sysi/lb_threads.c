@@ -53,14 +53,14 @@ int lb_fork (int * chid, int (* entry_func) (void)) {
         return 0;
 };
 
-int lb_raise (int lbtid, int sig) {
+int lb_raise (int * lbtid, int * sig) {
         return -1;
 };
 
-int free_thread (int lbtid) {
+int free_thread (int * lbtid) {
         struct lbt_item * li = lbt_head;
         struct lbt_item * pli;
-        while (li->next != NULL && li->lbtid != lbtid) {
+        while (li->next != NULL && li->lbtid != *lbtid) {
                 pli = li;
                 li = li->next;
         };
