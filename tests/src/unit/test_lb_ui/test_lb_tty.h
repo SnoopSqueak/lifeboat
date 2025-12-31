@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 
-const char * outpath = "testout.txt";
+static const char * outpath = "testout.txt";
 
 static MunitResult test_initstream (const MunitParameter params[], void * data) {
         int maxsize = 64;
