@@ -28,6 +28,11 @@ static MunitResult test_initut (const MunitParameter params[], void * data) {
         return MUNIT_OK;
 };
 
+static MunitResult test_count_vischar (const MunitParameter params[], void * data) {
+        // count_vischar();
+        return MUNIT_OK;
+};
+
 static MunitResult test_count (const MunitParameter params[], void * data) {
         munit_assert_int(count_ntstring("Hello, world!"), ==, 13);
         munit_assert_int(count_ntstring(""), ==, 0);
@@ -163,6 +168,7 @@ static MunitResult test_string_to_int (const MunitParameter params[], void * dat
 static MunitTest lb_string_tests[] = {
         {(char*) "/init/null terminated", test_initnt, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
         {(char*) "/init/unterminated", test_initut, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+        {(char*) "/count_vischar", test_count_vischar, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
         {(char*) "/count", test_count, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
         {(char*) "/resize/grow", test_grow, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
         {(char*) "/resize/shrink", test_shrink, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},

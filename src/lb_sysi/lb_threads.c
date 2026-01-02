@@ -3,7 +3,7 @@
 #include <stdatomic.h>
 #include <threads.h>
 
-struct lbt_item * lbt_head;
+struct lbt_item * lbt_head = NULL;
 tss_t tss_lbtid;
 atomic_int next_lbtid;
 mtx_t * lbt_mtx;
@@ -29,17 +29,21 @@ int init_thread (int * lbtid, int (* entry_func) (void)) {
                 li->next = lbti;
                 if (thrd_create(lbti->value->thr, (thrd_start_t) (* entry_func), NULL) != thrd_success) return -1;
         };
-                if (tss_set(tss_lbtid, &lbtid) != thrd_success) return -1;
-                return 0;
+        if (tss_set(tss_lbtid, &lbtid) != thrd_success) return -1;
+        return 0;
+};
+
+bool is_lbt_init () {
+        return lbt_head != NULL;
 };
 
 int init_lbthreads () {
+        if (is_lbt_init()) return -1;
         if (tss_create(&tss_lbtid, free) != thrd_success) return -1;
         atomic_init(&next_lbtid, 0);
         lbt_mtx = malloc(sizeof(mtx_t));
         if (mtx_init(lbt_mtx, mtx_plain) != 0) return -1;
         if (mtx_lock(lbt_mtx) != thrd_success) return -1;
-        lbt_head = NULL;
         int id = 0;
         if (init_thread(&id, NULL) != 0) return -1;
         if (mtx_unlock(lbt_mtx) != thrd_success) return -1;
@@ -48,7 +52,7 @@ int init_lbthreads () {
 
 int lb_fork (int * chid, int (* entry_func) (void)) {
         if (mtx_lock(lbt_mtx) != thrd_success) return -1;
-        if (init_thread(chid, entry_func) != 0) return -1;
+        // if (init_thread(chid, entry_func) != 0) return -1;
         if (mtx_unlock(lbt_mtx) != thrd_success) return -1;
         return 0;
 };

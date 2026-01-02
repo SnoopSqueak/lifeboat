@@ -8,7 +8,6 @@ lb_main=$(bdir)/lb_main.o
 
 ssysi=$(sdir)/lb_sysi
 bsysi=$(bdir)/lb_sysi
-lb_formio=$(bsysi)/lb_formio.o
 lb_string=$(bsysi)/lb_string.o
 lb_threads=$(bsysi)/lb_threads.o
 
@@ -17,7 +16,7 @@ bui=$(bdir)/lb_ui
 lb_view=$(bui)/lb_view.o
 lb_tty=$(bui)/lb_tty.o
 
-OBJ=$(lb_formio) $(lb_string) $(lb_threads)
+OBJ=$(lb_string) $(lb_threads)
 OBJ+= $(lb_view) $(lb_tty)
 
 TEST_TARGET=TestLifeBoat
@@ -48,7 +47,7 @@ endif
 all : $(TARGET) $(TEST_TARGET)
 
 $(TARGET) : $(sdir)/main.c $(sdir)/main.h $(OBJ)
-	@echo building $@ with $(CC)
+	@echo building $@ with $(CC)!
 	@$(CC) $(CFLAGS) $< $(OBJ) -o $@
 
 $(lb_main) : $(sdir)/lb_main.c $(sdir)/lb_main.h $(bdir)/
@@ -94,10 +93,10 @@ $(tedir)/ :
 	@mkdir $@
 
 .PHONY : tests
-tests: $(TEST_TARGET) $(tedir)/ $(tedir)/test_lb_units $(tedir)/test_lb_full
+tests: $(tedir)/ $(tedir)/test_lb_units $(tedir)/test_lb_full $(TEST_TARGET)
 
 $(TEST_TARGET) : $(tsdir)/test_lb_full.c $(tbdir)/ $(TEST_OBJ) $(bdir)/lb_main.o
-	@echo building $@...
+	@echo building $@ with $(CC)!
 	@$(CC) $(TEST_CFLAGS) $< $(OBJ) $(testlib) -o $(TEST_TARGET)
 
 $(tedir)/test_lb_full : $(tsdir)/test_lb_full.c $(tbdir)/test_lb_units.o $(TEST_OBJ) $(tedir)/
@@ -129,17 +128,6 @@ $(tbdir)/test_lb_sysi/test_%.o : $(tudir)/test_lb_sysi/test_%.c $(tbdir)/test_lb
 	@$(CC) $(TEST_CFLAGS) -c $< -o $@
 
 
-.PHONY : t
-t : $(tedir)/test_lb_units
-
-.PHONY : info
-info :
-	@echo $(TEST_OBJ)
-	@echo $(tbdir)
-	@echo $(tudir)
-	@echo $(OBJ)
-
-
 .PHONY : cleanall
 cleanall: clean cleantests
 
@@ -151,4 +139,5 @@ clean :
 .PHONY : cleantests
 cleantests:
 	rm -rf $(tbdir)/ $(tedir)/
+	rm -rf lb_testfile.txt
 	rm -rf $(TEST_TARGET)

@@ -3,11 +3,15 @@
 
 #include "munit.h"
 #include "test_lb_sysi/test_lb_string.h"
+#include "test_lb_sysi/test_lb_threads.h"
 #include "test_lb_ui/test_lb_tty.h"
+#include "test_lb_ui/test_lb_view.h"
 
 static MunitSuite lb_unit_suites[] = {
         lb_string_suite,
+        lb_threads_suite,
         lb_tty_suite,
+        lb_view_suite,
         { NULL, NULL, NULL, 0, MUNIT_SUITE_OPTION_NONE }
 };
 

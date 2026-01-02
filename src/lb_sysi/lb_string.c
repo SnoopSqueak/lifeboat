@@ -34,6 +34,35 @@ struct lb_string * init_utstring (char * utstring, int nchar) {
         return str;
 };
 
+int count_vischar (char * ntstring) {
+        if (ntstring[0] == '\0') return -1;
+        int i = 0;
+        int count = 0;
+        char c = ntstring[i];
+        bool escseq = false;
+        while (c != '\0') {
+                if (escseq == false) {
+                        if (c == LBF_ESCAPE) escseq = true;
+                } else {
+                        switch (c) {
+                                case 'H':
+                                case 'J':
+                                case 'm':
+                                case 'L':
+                                case 'C':
+                                case 'R':
+                                        escseq = false;
+                                        count--;
+                                break;
+                        };
+                };
+                if (escseq == false) count++;
+                i++;
+                c = ntstring[i];
+        };
+        return count;
+};
+
 int count_ntstring (char * ntstring) {
         if (ntstring == NULL) return -1;
         int i = 0;
@@ -195,6 +224,14 @@ struct lb_string * int_to_string (int n) {
                 free_string(&tmp);
         };
         return result;
+};
+
+bool is_minus_char (char c) {
+        return (c == get_minus_char());
+};
+
+char get_minus_char () {
+        return MINUSCHAR;
 };
 
 int free_string (struct lb_string ** str) {

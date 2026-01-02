@@ -12,6 +12,7 @@ struct lbt_item {
         struct lbt_item * next;
 };
 
+bool is_lbt_init ();
 int init_lbthreads ();
 int lb_fork (int * chid, int (* chld_func) (void));
 int lb_raise (int * lbtid, int * sig);

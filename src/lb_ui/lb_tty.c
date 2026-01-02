@@ -121,7 +121,8 @@ int get_tty_in_line (struct lb_tty * tty) {
 };
 
 int clear_tty_in (struct lb_tty * tty) {
-        struct lb_string * clear = init_ntstring(home_and_clear());
+        //struct lb_string * clear = init_ntstring(home_and_clear());
+        struct lb_string * clear = init_ntstring("\033[2J\033[1;1H");
         if (put_to_tty_in(tty, clear) == -1) return -1;
         if (free_string(&clear) == -1) return -1;
         if (clear_string(tty->ins->string) == -1) return -1;
@@ -130,7 +131,8 @@ int clear_tty_in (struct lb_tty * tty) {
 };
 
 int clear_tty_out (struct lb_tty * tty) {
-        struct lb_string * clear = init_ntstring(home_and_clear());
+        // struct lb_string * clear = init_ntstring(home_and_clear());
+        struct lb_string * clear = init_ntstring("\033[2J\033[1;1H");
         if (put_to_tty_out(tty, clear) == -1) return -1;
         if (free_string(&clear) == -1) return -1;
         if (clear_string(tty->outs->string) == -1) return -1;

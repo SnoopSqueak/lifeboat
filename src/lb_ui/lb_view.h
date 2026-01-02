@@ -13,7 +13,7 @@
         //~ int (* handler)(char ** argv);
 //~ };
 
-int format_line (struct lb_string * dest, struct lb_state * state, struct lb_string * front, struct lb_string * mid, struct lb_string * end);
-int view_landing (struct lb_state * state);
+int format_line (struct lb_string * dest, int ncol, char * front, char * mid, char * end);
+int view_landing(struct lb_tty * tty, char * swname, char * swvers);
 
 #endif /* LB_UI_H */
