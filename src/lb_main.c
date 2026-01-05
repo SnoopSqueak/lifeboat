@@ -25,12 +25,14 @@ int parloop () {
         return 0;
 };
 
-int lb_main (int * maxlinelength, int * nrow, int * ncol) {
+int lb_main (int * ncol, int * nrow, int * maxlinelength) {
         // int maxoutlength = *maxlinelength * *nrow;
         // struct lb_tty * tty = init_tty(stdin, maxlinelength, stdout, &maxoutlength, nrow, ncol);
-        // view_landing(tty, SOFTWARE_NAME, SOFTWARE_VERSION);
-        // get_tty_in_line(tty);
-        // printf("User input: '%s'\n", tty->ins->string->ntstring);
+        init_tty(ncol, nrow, maxlinelength);
+        view_landing(ncol, nrow, SOFTWARE_NAME, SOFTWARE_VERSION);
+        char * usrbuf = calloc(*maxlinelength, sizeof(char));
+        get_tty_in(usrbuf);
+        printf("User input: '%s'\n", usrbuf);
 
         // struct lb_string * test = init_ntstring("Hello!" LBF_FG_GREEN "TEST!" LBF_FG_RESET);
         // printf(test->ntstring);

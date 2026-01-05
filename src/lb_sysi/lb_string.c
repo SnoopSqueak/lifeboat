@@ -5,7 +5,7 @@
 #define MINUSCHAR '-'
 #define AS_FIRSTNUM 48
 
-int string_count_vis (char * source, int * dest) {
+int count_string_vis (int * dest, char * source) {
         int i = 0;
         int count = 0;
         char c = source[i];
@@ -34,7 +34,7 @@ int string_count_vis (char * source, int * dest) {
         return 0;
 };
 
-int string_get_size (char * source, int * dest) {
+int count_string_size (int * dest, char * source) {
         if (source == NULL || dest == NULL) return -1;
         *dest = 0;
         while (source[*dest] != '\0') {
@@ -46,10 +46,10 @@ int string_get_size (char * source, int * dest) {
 
 int string_cat (char * dest, char * source) {
         int size;
-        if (string_get_size(source, &size) != 0) return -1;
+        if (count_string_size(&size, source) != 0) return -1;
         if (size == 1) return 0;
         int index;
-        if (string_get_size(dest, &index) != 0) return -1;
+        if (count_string_size(&index, dest) != 0) return -1;
         index--;
         int i = 0;
         char c;
@@ -65,7 +65,8 @@ int string_reverse (char * string) {
         char swp;
         int i = 0;
         int count;
-        if (string_get_size(string, &count) != 0) return -1;
+        // TODO: skip nonprinting characters?
+        if (count_string_size(&count, string) != 0) return -1;
         count--;
         while (i < count / 2) {
                 swp = string[i];
@@ -78,7 +79,7 @@ int string_reverse (char * string) {
 
 int int_from_char (int * dest, char * source) {
         int base;
-        if (string_get_size(ONESLIST, &base) != 0) return -1;
+        if (count_string_size(&base, ONESLIST) != 0) return -1;
         if (*source < AS_FIRSTNUM || *source > AS_FIRSTNUM + base) {
                 errno = ERANGE;
                 return -1;
@@ -90,7 +91,7 @@ int int_from_char (int * dest, char * source) {
 int int_from_string (int * dest, char * source) {
         int total = 0;
         int i;
-        if (string_get_size(source, &i) != 0) return -1;
+        if (count_string_size(&i, source) != 0) return -1;
         i -= 2;
         int ival;
         bool isneg = false;

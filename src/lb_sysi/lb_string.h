@@ -35,7 +35,8 @@
 #define LBF_FG_BR_WHITE "\033[97m"
 #define LBF_FG_RESET "\033[0m"
 
-int string_count_vis (char * source, int * dest);
+int count_string_vis (int * dest, char * source);
+int string_cat (char * dest, char * source);
 int int_from_char (int * dest, char * source);
 int int_from_string (int * dest, char * source);
 int string_from_int (char * dest, int * source);

@@ -4,8 +4,8 @@
 #include "main.h"
 
 int main (int argc, char ** argv) {
-        int maxlinelength = MAX_INPUT_LENGTH;
-        int nrow = TERM_ROWS;
         int ncol = TERM_COLS;
-        return lb_main(&maxlinelength, &nrow, &ncol);
+        int nrow = TERM_ROWS;
+        int maxlinelength = MAX_INPUT_LENGTH;
+        return lb_main(&ncol, &nrow, &maxlinelength);
 };

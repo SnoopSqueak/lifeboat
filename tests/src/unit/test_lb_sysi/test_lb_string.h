@@ -4,11 +4,11 @@
 #include "munit.h"
 #include "lb_sysi/lb_string.h"
 
-static MunitResult test_count_vischar (const MunitParameter params[], void * data) {
+static MunitResult test_count_string_vis (const MunitParameter params[], void * data) {
         int * result = malloc(sizeof(int));
-        munit_assert_int(string_count_vis("Hello", result), ==, 0);
+        munit_assert_int(count_string_vis(result, "Hello"), ==, 0);
         munit_assert_int(*result, ==, 5);
-        munit_assert_int(string_count_vis("", result), ==, 0);
+        munit_assert_int(count_string_vis(result, ""), ==, 0);
         munit_assert_int(*result, ==, 0);
         return MUNIT_OK;
 };
@@ -49,7 +49,7 @@ static MunitResult test_string_from_int (const MunitParameter params[], void * d
 };
 
 static MunitTest lb_string_tests[] = {
-        {(char*) "/count_vischar", test_count_vischar, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+        {(char*) "/count/string vis", test_count_string_vis, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
         {(char*) "/convert/int from char", test_int_from_char, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
         {(char*) "/convert/int from string", test_int_from_string, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
         {(char*) "/convert/string from int", test_string_from_int, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
