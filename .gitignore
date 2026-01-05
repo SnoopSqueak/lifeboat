@@ -3,5 +3,6 @@ build/*
 build/LifeBoat
 tests/build/*
 tests/build
-./LifeBoat
-./TestLifeBoat
+LifeBoat
+TestLifeBoat
+lb_testfile.txt
