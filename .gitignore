@@ -3,6 +3,8 @@ build/*
 build/LifeBoat
 tests/build/*
 tests/build
+tests/bin/*
+tests/bin
 LifeBoat
 TestLifeBoat
 lb_testfile.txt
