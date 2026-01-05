@@ -10,6 +10,7 @@
 
 #define SOFTWARE_NAME "LifeBoat"
 #define SOFTWARE_VERSION "0.0.0"
+#define mytest(a,b) ("letter "a", letter "b".")
 
 int lb_main (int * maxlinelength, int * nrow, int * ncol);
 

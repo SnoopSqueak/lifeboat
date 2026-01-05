@@ -92,6 +92,9 @@ $(tbdir)/%/ : $(tbdir)/
 $(tedir)/ :
 	@mkdir $@
 
+$(tedir)/%/ : $(tedir)/
+	@mkdir -p $@
+
 .PHONY : tests
 tests: $(tedir)/ $(tedir)/test_lb_units $(tedir)/test_lb_full $(TEST_TARGET)
 
@@ -126,6 +129,10 @@ $(tbdir)/test_lb_ui/test_%.o : $(tudir)/test_lb_ui/test_%.c $(tbdir)/test_lb_ui/
 $(tbdir)/test_lb_sysi/test_%.o : $(tudir)/test_lb_sysi/test_%.c $(tbdir)/test_lb_sysi/ $(bdir)/lb_sysi/%.o $(testlib)
 	@echo building test_$(*F) with $(CC)
 	@$(CC) $(TEST_CFLAGS) -c $< -o $@
+
+$(tedir)/test_lb_sysi/test_lb_string : $(tbdir)/test_lb_sysi/test_lb_string.o $(bdir)/lb_sysi/lb_string.o $(tbdir)/munit.o $(tedir)/test_lb_sysi/
+	@echo building bin test_lb_string with $(CC)
+	@$(CC) $(TEST_CFLAGS) $< $(bdir)/lb_sysi/lb_string.o $(testlib) -o $@
 
 
 .PHONY : cleanall

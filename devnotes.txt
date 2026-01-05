@@ -1,0 +1,14 @@
+Future TODO: Print a nice error message if anything necessary is not supported?
+
+https://en.cppreference.com/w/c/preprocessor/replace.html
+
+Write macros for the string format escape sequences, take in numbers
+
+Each time a character is typed:
+        clear tty out
+        reprint tty out
+        reprint tty in (slice of length ncol)
+        move cursor to appropriate location
+
+Make it as responsive as possible.
+...Can't without termios.
