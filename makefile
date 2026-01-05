@@ -44,7 +44,7 @@ else
 endif
 
 .PHONY : all
-all : $(TARGET) $(TEST_TARGET)
+all : $(TARGET) tests
 
 $(TARGET) : $(sdir)/main.c $(sdir)/main.h $(OBJ)
 	@echo building $@ with $(CC)!
@@ -136,7 +136,7 @@ $(tedir)/test_lb_sysi/test_lb_string : $(tbdir)/test_lb_sysi/test_lb_string.o $(
 
 
 .PHONY : cleanall
-cleanall: clean cleantests
+cleanall : clean cleantests
 
 .PHONY : clean
 clean :
@@ -144,7 +144,7 @@ clean :
 	rm -rf $(TARGET)
 
 .PHONY : cleantests
-cleantests:
+cleantests :
 	rm -rf $(tbdir)/ $(tedir)/
 	rm -rf lb_testfile.txt
 	rm -rf $(TEST_TARGET)
