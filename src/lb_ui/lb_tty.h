@@ -9,10 +9,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-int init_tty (int * ncol, int * nrow, int * maxlinelen);
-int draw_tty ();
-int put_tty_out (char * source);
-int get_tty_in (char * dest);
-int release_tty ();
+int tty_init (int * ncol, int * nrow, int * maxlinelen);
+int tty_draw ();
+int tty_put_out (char * source);
+int tty_get_in (char * dest);
+int tty_free ();
 
 #endif /* LB_TTY_H */

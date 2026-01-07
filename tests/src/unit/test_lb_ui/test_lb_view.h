@@ -7,11 +7,11 @@
 #include <stdio.h>
 
 static MunitResult test_wip (const MunitParameter params[], void * data) {
-        return MUNIT_OK;
+        return MUNIT_SKIP;
 };
 
 static MunitTest lb_view_tests[] = {
-        {(char*) "wip", test_wip, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+        {(char*) "/wip", test_wip, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
         {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}
 };
 

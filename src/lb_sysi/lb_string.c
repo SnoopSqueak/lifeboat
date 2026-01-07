@@ -10,7 +10,7 @@ int count_string_vis (int * dest, char * source) {
         int count = 0;
         char c = source[i];
         bool escseq = false;
-        while (c != '\0') {
+        while (c != LBF_NULL) {
                 if (escseq == false) {
                         if (c == LBF_ESCAPE) escseq = true;
                 } else {
@@ -37,10 +37,49 @@ int count_string_vis (int * dest, char * source) {
 int count_string_size (int * dest, char * source) {
         if (source == NULL || dest == NULL) return -1;
         *dest = 0;
-        while (source[*dest] != '\0') {
+        while (source[*dest] != LBF_NULL) {
                 (*dest)++;
         };
         (*dest)++;
+        return 0;
+};
+
+bool string_is_equal (char * subject, char * target) {
+        int i = 0;
+        char s;
+        char t;
+        do {
+                s = subject[i];
+                t = target[i];
+                if (s != t) return false;
+                i++;
+        } while (s != LBF_NULL && t != LBF_NULL);
+        return true;
+};
+
+int string_ins_char (char * dest, int * index, char * source) {
+        int i = *index;
+        char c = dest[i];
+        char tmp = dest[i];
+        if (c == LBF_NULL) return -1;
+        i++;
+        while (c != LBF_NULL) {
+                tmp = dest[i];
+                dest[i] = c;
+                i++;
+                c = tmp;
+        };
+        dest[*index] = *source;
+        dest[i] = LBF_NULL;
+        return 0;
+};
+
+int string_copy (char * dest, int * d_idx, char * source, int * s_idx, int * count) {
+        int i;
+        for (i = 0; i < *count; i++) {
+                dest[*d_idx + i] = source[*s_idx + i];
+        };
+        dest[*d_idx + i] = LBF_NULL;
         return 0;
 };
 
@@ -57,7 +96,7 @@ int string_cat (char * dest, char * source) {
                 c = source[i];
                 dest[index + i] = c;
                 i++;
-        } while (c != '\0');
+        } while (c != LBF_NULL);
         return 0;
 };
 
@@ -114,6 +153,10 @@ int int_from_string (int * dest, char * source) {
 
 int string_from_int (char * dest, int * source) {
         int n = *source;
+        if (*source == 0) {
+                if (string_cat(dest, "0") != 0) return -1;
+                return 0;
+        };
         char * tmp = calloc(1, sizeof(char));
         int size = 4;
         int ti = 0;
@@ -134,9 +177,28 @@ int string_from_int (char * dest, int * source) {
         if (isneg) {
                 tmp[ti] = MINUSCHAR;
         };
-        tmp[ti+1] = '\0';
+        tmp[ti+1] = LBF_NULL;
         if (string_reverse(tmp) != 0) return -1;
         if (string_cat(dest, tmp) != 0) return -1;
         free(tmp);
+        return 0;
+};
+
+int string_move_cur (char * dest, int * x, int * y) {
+        int tstr_len = 8;
+        char * rowstr = calloc(tstr_len, sizeof(char));
+        if (string_from_int(rowstr, y) != 0) return -1;
+        char * colstr = calloc(tstr_len, sizeof(char));
+        if (string_from_int(colstr, x) != 0) return -1;
+        char * seq = calloc(3 * tstr_len, sizeof(char));
+        if (string_cat(seq, "\033[") != 0) return -1;
+        if (string_cat(seq, rowstr) != 0) return -1;
+        if (string_cat(seq, ";") != 0) return -1;
+        if (string_cat(seq, colstr) != 0) return -1;
+        if (string_cat(seq, "H") != 0) return -1;
+        if (string_cat(dest, seq) != 0) return -1;
+        free(rowstr);
+        free(colstr);
+        free(seq);
         return 0;
 };

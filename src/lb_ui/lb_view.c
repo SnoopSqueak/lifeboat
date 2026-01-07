@@ -57,7 +57,7 @@ int format_line (char * dest, int * ncol, char * front, char * mid, char * end) 
                         mi++;
                         i++;
                 };
-                tmp[0] = '\0';
+                tmp[0] = LBF_NULL;
         };
         string_cat(tmp, " ");
         if (tmp == NULL) return -1;
@@ -73,9 +73,8 @@ int format_line (char * dest, int * ncol, char * front, char * mid, char * end) 
                         i++;
                 };
         };
-        tmp[0] = '\0';
-        string_cat(tmp, " ");
-        if (tmp == NULL) return -1;
+        tmp[0] = LBF_NEWLINE;
+        tmp[1] = LBF_NULL;
         if (string_cat(dest, tmp) != 0) return -1;
         free(tmp);
         free(fstr);
@@ -95,8 +94,7 @@ int view_landing(int * ncol, int * nrow, char * swname, char * swvers) {
         if (format_line(lines, ncol, NULL, NULL, NULL) == -1) return -1;
         if (format_line(lines, ncol, LBF_FG_CYAN "Type /help to see available commands." LBF_FG_RESET, NULL, NULL) == -1) return -1;
         if (format_line(lines, ncol, NULL, LBF_FG_BR_BLACK "(notification area)" LBF_FG_RESET, NULL) == -1) return -1;
-        //if (format_line(lines, ncol, tty->ins->string->ntstring, NULL, NULL) == -1) return -1;
-        if (put_tty_out(lines) != 0) return -1;
+        if (tty_put_out(lines) != 0) return -1;
         free(lines);
         return 0;
 };
