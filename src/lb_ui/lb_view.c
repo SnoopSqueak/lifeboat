@@ -12,15 +12,15 @@ int format_line (char * dest, int * ncol, char * front, char * mid, char * end) 
                 return -1;
         if (front != NULL) {
                 if (string_cat(fstr, front) != 0) return -1;
-                if (count_string_vis(&flen, front) != 0) return -1;
+                if (string_count_vis(&flen, front) != 0) return -1;
         };
         if (mid != NULL) {
                 if (string_cat(mstr, mid) != 0) return -1;
-                if (count_string_vis(&mlen, mid) != 0) return -1;
+                if (string_count_vis(&mlen, mid) != 0) return -1;
         };
         if (end != NULL) {
                 if (string_cat(estr, end) != 0) return -1;
-                if (count_string_vis(&elen, end) != 0) return -1;
+                if (string_count_vis(&elen, end) != 0) return -1;
         };
         int len = flen + mlen + elen;
         if (len > *ncol) {
@@ -87,13 +87,25 @@ int view_landing(int * ncol, int * nrow, char * swname, char * swvers) {
         // Doubling space, for nonvisible characters
         char * lines = calloc((*ncol) * (*nrow) * 2, sizeof(char));
         if (lines == NULL) return -1;
-        if (format_line(lines, ncol, swname, LBF_FG_BR_BLACK "status: offline" LBF_FG_RESET, swvers) == -1) return -1;
-        if (format_line(lines, ncol, "Hosting ## room(s) across ## socket(s).", NULL, "Accepted ## active connection(s).") == -1) return -1;
-        if (format_line(lines, ncol, LBF_FG_BR_BLACK "  (## user(s) waiting to connect to you.)" LBF_FG_RESET, NULL, NULL) == -1) return -1;
-        if (format_line(lines, ncol, "Joined to ## room(s) across ## socket(s).", NULL, NULL) == -1) return -1;
+        if (format_line(lines, ncol, swname,
+                LBF_FG_BR_BLACK "status: offline" LBF_FG_RESET, swvers) == -1)
+                return -1;
+        if (format_line(lines, ncol,
+                "Hosting ## room(s) across ## socket(s).", NULL,
+                        "Accepted ## active connection(s).") == -1) return -1;
+        if (format_line(lines, ncol,
+                LBF_FG_BR_BLACK "  (## user(s) waiting to connect to you.)"
+                LBF_FG_RESET, NULL, NULL) == -1) return -1;
+        if (format_line(lines, ncol,
+                "Joined to ## room(s) across ## socket(s).", NULL, NULL)
+                == -1) return -1;
         if (format_line(lines, ncol, NULL, NULL, NULL) == -1) return -1;
-        if (format_line(lines, ncol, LBF_FG_CYAN "Type /help to see available commands." LBF_FG_RESET, NULL, NULL) == -1) return -1;
-        if (format_line(lines, ncol, NULL, LBF_FG_BR_BLACK "(notification area)" LBF_FG_RESET, NULL) == -1) return -1;
+        if (format_line(lines, ncol, LBF_FG_CYAN
+                "Type /help to see available commands." LBF_FG_RESET,
+                NULL, NULL) == -1) return -1;
+        if (format_line(lines, ncol, NULL,
+                LBF_FG_BR_BLACK "(notification area)" LBF_FG_RESET, NULL)
+                == -1) return -1;
         if (tty_put_out(lines) != 0) return -1;
         free(lines);
         return 0;

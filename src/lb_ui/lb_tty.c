@@ -44,17 +44,9 @@ int tty_draw () {
         if (fputs(strout, fout) == EOF) return -1;
         char * moveseq = calloc(12, sizeof(char));
         int col = 1;
-
-        char * tstr = malloc(32 * sizeof(char));
-        tstr[0] = LBF_NULL;
-        if (string_from_int(tstr, &curi) != 0) return -1;
-        if (string_cat(tstr, " <- curi\n\n") != 0) return -1;
-        if (fputs(tstr, fout) == EOF) return -1;
-        free(tstr);
-
         if (string_move_cur(moveseq, &col, &nrow) != 0) return -1;
         int mslen;
-        if (count_string_size(&mslen, moveseq) != 0) return -1;
+        if (string_count_size(&mslen, moveseq) != 0) return -1;
         char * inslice = calloc(ncol + mslen, sizeof(char));
         if (string_cat(inslice, moveseq) != 0) return -1;
         mslen--;
@@ -83,8 +75,7 @@ int tty_get_in (char * dest) {
         linei = 0;
         char c;
         bool isesc = false;
-        // big enough to hold any escape sequence
-        int elen = 12;
+        int elen = LBF_ESCSEQ_LEN;
         char * ebuf = calloc(elen, sizeof(char));
         int ei;
         int ilen;
@@ -105,17 +96,18 @@ int tty_get_in (char * dest) {
                 if (!isesc) {
                         if (i + 1 < linelen - 1) {
                                 if (curi < i) {
-                                        if (string_ins_char(strin, &curi, &c) != 0) return -1;
+                                        if (string_ins_char(strin, &curi, &c)
+                                                != 0) return -1;
                                 } else {
                                         strin[i] = c;
                                         strin[i+1] = LBF_NULL;
                                 };
                                 i++;
+                                // TODO: core dumped, enter after long line...
                                 if (i >= ncol) {
                                         linei++;
-                                } else {
-                                        curi++;
-                                };
+                                }
+                                curi++;
                         };
                 } else {
                         if (ei >= elen) {
@@ -135,7 +127,8 @@ int tty_get_in (char * dest) {
                                 };
                                 isesc = false;
                         } else if (string_is_equal(ebuf, LBF_RIGHT)) {
-                                if (count_string_size(&ilen, strin) != 0) return -1;
+                                if (string_count_size(&ilen, strin) != 0)
+                                        return -1;
                                 if (curi < ilen - 1) {
                                         curi++;
                                         if (curi > linei + ncol) {

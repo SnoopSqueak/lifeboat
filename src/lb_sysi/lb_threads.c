@@ -27,7 +27,9 @@ int init_thread (int * lbtid, int (* entry_func) (void)) {
                         li = li->next;
                 };
                 li->next = lbti;
-                if (thrd_create(lbti->value->thr, (thrd_start_t) (* entry_func), NULL) != thrd_success) return -1;
+                if (thrd_create(lbti->value->thr,
+                        (thrd_start_t) (* entry_func), NULL) != thrd_success)
+                        return -1;
         };
         if (tss_set(tss_lbtid, &lbtid) != thrd_success) return -1;
         return 0;

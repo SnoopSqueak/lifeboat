@@ -52,7 +52,7 @@ int lb_main (int * ncol, int * nrow, int * maxlinelength) {
                 return lb_exit(EXIT_FAILURE);
         };
         if (tty_free() != 0) return EXIT_FAILURE;
-        printf("Usr input: '%s'.\n", usrbuf);
+        printf("\nUsr input: '%s'.\n", usrbuf);
         free(usrbuf);
         return 0;
 

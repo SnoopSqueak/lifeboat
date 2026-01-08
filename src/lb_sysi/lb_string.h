@@ -7,12 +7,41 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Large enough to hold most escape sequences, including null character.
+#define LBF_ESCSEQ_LEN 12
+// Designing for 80x8, not expecting more than 3 digits in a number.
+#define LBF_NUMSEQ_LEN 4
+#define LBF_NUMBASE 10
+
+// Escape Sequence end codes
+#define LBF_ES_UP 'A'
+#define LBF_ES_DOWN 'B'
+#define LBF_ES_LEFT 'C'
+#define LBF_ES_RIGHT 'D'
+#define LBF_ES_MOVE 'H'
+#define LBF_ES_CLEAR 'J'
+#define LBF_ES_GRAPHICS 'm'
+#define LBF_ES_ALIGN_LEFT 'L'
+#define LBF_ES_ALIGN_CENTER 'C'
+#define LBF_ES_ALIGN_RIGHT 'R'
+
+// Character definitions
 #define LBF_NULL '\0'
 #define LBF_BACKSPACE '\010'
 #define LBF_NEWLINE '\012'
 #define LBF_RETURN '\015'
 #define LBF_ESCAPE '\033'
 #define LBF_DELETE '\177'
+#define LBF_NUMBERS "0123456789"
+#define LBF_OSB '['
+#define LBF_MINUS '-'
+
+// Custom escape sequences
+#define LBF_ALIGN_LEFT "\033[[*;L"
+#define LBF_ALIGN_CENTER "\033[[*;C"
+#define LBF_ALIGN_RIGHT "\033[[*;R"
+
+// ANSI escape sequences
 #define LBF_CLEAR "\033[2J"
 #define LBF_RESET "\033[2J\033[1;1H"
 #define LBF_UP "\033[A"
@@ -20,10 +49,7 @@
 #define LBF_RIGHT "\033[C"
 #define LBF_LEFT "\033[D"
 
-#define LBF_ALIGN_LEFT "\033[[*;L"
-#define LBF_ALIGN_CENTER "\033[[*;C"
-#define LBF_ALIGN_RIGHT "\033[[*;R"
-
+// Foreground colors
 #define LBF_FG_BLACK "\033[30m"
 #define LBF_FG_RED "\033[31m"
 #define LBF_FG_GREEN "\033[32m"
@@ -42,11 +68,15 @@
 #define LBF_FG_BR_WHITE "\033[97m"
 #define LBF_FG_RESET "\033[0m"
 
-int count_string_vis (int * dest, char * source);
-int count_string_size (int * dest, char * source);
+int string_count_vis (int * dest, char * source);
+int string_count_size (int * dest, char * source);
 bool string_is_equal (char * subject, char * target);
+int string_del (char * str, int * index, int * count);
 int string_ins_char (char * dest, int * index, char * source);
-int string_copy (char * dest, int * d_idx, char * source, int * s_idx, int * count);
+int string_ins_string (char * dest, int * d_idx, char * source, int * s_idx,
+                       int * count);
+int string_copy (char * dest, int * d_idx, char * source, int * s_idx,
+                 int * count);
 int string_cat (char * dest, char * source);
 int int_from_char (int * dest, char * source);
 int int_from_string (int * dest, char * source);

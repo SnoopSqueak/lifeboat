@@ -3,6 +3,8 @@ Status: Non functioning, work-in-progress.
 
 A project by [SnoopSqueak](https://snoopsqueak.com).
 
+![A screenshot of a Linux terminal showing an application that ran. It displayed some text of different colors on the screen.](screenshot_welcome.png "LifeBoat")
+
 The goal is to create a peer-to-peer self-hosted secure chat app.
 
 It is small and simple for maximum accessibility.
@@ -34,7 +36,6 @@ Clarity:
 - Avoid global variables.
 - Avoid unnecessary use of typedef.
 - Avoid enums.
-- Logical code is easier to follow even with abbreviated names.
 
 This project is using [Munit](https://nemequ.github.io/munit/#) by [nemequ](https://github.com/nemequ) for testing.
 
