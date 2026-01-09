@@ -40,14 +40,14 @@ void signal_handler (int signal) {
         raise(signal);
 };
 
-int lb_main (int * ncol, int * nrow, int * maxlinelength) {
+int lb_main (int *ncol, int *nrow, int *maxlinelength) {
         if (signal(SIGINT, signal_handler) != 0) return -1;
         if (signal(SIGSEGV, signal_handler) != 0) return -1;
         if (signal(SIGABRT, signal_handler) != 0) return -1;
         if (signal(SIGTERM, signal_handler) != 0) return -1;
         if (tty_init(ncol, nrow, maxlinelength) != 0) return -1;
         if (view_landing(ncol, nrow, SOFTWARE_NAME, SOFTWARE_VERSION) != 0) return -1;
-        char * usrbuf = calloc(*maxlinelength, sizeof(char));
+        char *usrbuf = calloc(*maxlinelength, sizeof(char));
         if (tty_get_in(usrbuf) != 0) {
                 return lb_exit(EXIT_FAILURE);
         };

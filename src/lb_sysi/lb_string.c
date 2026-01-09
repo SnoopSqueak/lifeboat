@@ -217,9 +217,9 @@ int string_from_int (char * dest, int * source) {
         if (string_cat(dest, tmp) != 0) goto cleantmp;
         free(tmp);
         return 0;
-        cleantmp:
-                free(tmp);
-        exiterr:
+cleantmp:
+        free(tmp);
+exiterr:
         return -1;
 };
 
@@ -248,12 +248,12 @@ int string_move_cur (char * dest, int * x, int * y) {
         free(colstr);
         free(seq);
         return 0;
-        cleanseq:
-                free(seq);
-        cleancol:
-                free(colstr);
-        cleanrow:
-                free(rowstr);
-        exiterr:
+cleanseq:
+        free(seq);
+cleancol:
+        free(colstr);
+cleanrow:
+        free(rowstr);
+exiterr:
         return -1;
 };

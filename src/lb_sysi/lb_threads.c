@@ -1,7 +1,7 @@
-#include "lb_threads.h"
-
 #include <stdatomic.h>
 #include <threads.h>
+
+#include "lb_threads.h"
 
 struct lbt_item * lbt_head = NULL;
 tss_t tss_lbtid;

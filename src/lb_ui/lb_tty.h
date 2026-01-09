@@ -1,13 +1,14 @@
 #ifndef LB_TTY_H
 #define LB_TTY_H
 
-#include "lb_sysi/lb_string.h"
-
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "lb_sysi/lb_io.h"
+#include "lb_sysi/lb_string.h"
 
 int tty_init (int * ncol, int * nrow, int * maxlinelen);
 int tty_draw ();

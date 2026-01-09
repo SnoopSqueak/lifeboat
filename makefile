@@ -8,6 +8,7 @@ lb_main=$(bdir)/lb_main.o
 
 ssysi=$(sdir)/lb_sysi
 bsysi=$(bdir)/lb_sysi
+lb_io=$(bsysi)/lb_io.o
 lb_string=$(bsysi)/lb_string.o
 lb_threads=$(bsysi)/lb_threads.o
 
@@ -16,7 +17,7 @@ bui=$(bdir)/lb_ui
 lb_view=$(bui)/lb_view.o
 lb_tty=$(bui)/lb_tty.o
 
-OBJ=$(lb_string) $(lb_threads)
+OBJ=$(lb_io) $(lb_string) $(lb_threads)
 OBJ+= $(lb_view) $(lb_tty)
 
 TEST_TARGET=TestLifeBoat
@@ -72,7 +73,7 @@ $(lb_string) : $(ssysi)/lb_string.c $(ssysi)/lb_string.h $(bsysi)/
 	@echo building $(*F) with $(CC)
 	@$(CC) $(CFLAGS) -c $(ssysi)/$(*F).c -o $@
 
-$(lb_formio) : $(ssysi)/lb_formio.c $(ssysi)/lb_formio.h $(bsysi)/
+$(lb_io) : $(ssysi)/lb_io.c $(ssysi)/lb_io.h $(bsysi)/
 	@echo building $(*F) with $(CC)
 	@$(CC) $(CFLAGS) -c $(ssysi)/$(*F).c -o $@
 

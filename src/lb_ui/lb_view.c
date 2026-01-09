@@ -1,13 +1,13 @@
 #include "lb_view.h"
 
-int format_line (char * dest, int * ncol, char * front, char * mid, char * end) {
+int format_line (char *dest, int *ncol, char *front, char *mid, char *end) {
         int flen = 0;
         int mlen = 0;
         int elen = 0;
-        char * tmp = calloc((*ncol) * 2, sizeof(char));
-        char * fstr = calloc((*ncol) * 2, sizeof(char));
-        char * mstr = calloc((*ncol) * 2, sizeof(char));
-        char * estr = calloc((*ncol) * 2, sizeof(char));
+        char *tmp = calloc((*ncol) * 2, sizeof(char));
+        char *fstr = calloc((*ncol) * 2, sizeof(char));
+        char *mstr = calloc((*ncol) * 2, sizeof(char));
+        char *estr = calloc((*ncol) * 2, sizeof(char));
         if (tmp == NULL || fstr == NULL || mstr == NULL || estr == NULL)
                 return -1;
         if (front != NULL) {
@@ -83,9 +83,9 @@ int format_line (char * dest, int * ncol, char * front, char * mid, char * end) 
         return 0;
 };
 
-int view_landing(int * ncol, int * nrow, char * swname, char * swvers) {
+int view_landing(int *ncol, int *nrow, char *swname, char *swvers) {
         // Doubling space, for nonvisible characters
-        char * lines = calloc((*ncol) * (*nrow) * 2, sizeof(char));
+        char *lines = calloc((*ncol) * (*nrow) * 2, sizeof(char));
         if (lines == NULL) return -1;
         if (format_line(lines, ncol, swname,
                 LBF_FG_BR_BLACK "status: offline" LBF_FG_RESET, swvers) == -1)

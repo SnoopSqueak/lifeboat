@@ -1,66 +1,72 @@
 #include "lb_tty.h"
 
-#include <termios.h>
-#include <unistd.h>
-
 static int curi;
 static int linei;
 static int nrow;
 static int ncol;
 static int linelen;
-static FILE * fin;
-static FILE * fout;
-static int fdin;
-static int fdout;
-static char * strin;
-static char * strout;
-static struct termios * tcattr;
+static char *strin;
+static char *strout;
+static struct lb_file *fin;
+static struct lb_file *fout;
+static struct lb_tty_cfg *cfg;
 
-int tty_init (int * numcol, int * numrow, int * maxlinelen) {
+int tty_init (int *numcol, int *numrow, int *maxlinelen) {
         curi = 0;
         linei = 0;
         nrow = *numrow;
         ncol = *numcol;
         linelen = *maxlinelen;
-        fin = stdin;
-        fdin = STDIN_FILENO;
-        fout = stdout;
-        fdout = STDOUT_FILENO;
+        if (file_init_tty_in(&fin) != 0) return -1;
+        if (file_init_tty_out(&fout) != 0) goto cleanfin;
         strin = calloc(*maxlinelen, sizeof(char));
+        if (strin == NULL) goto cleanfiles;
         int outlen = (*maxlinelen) * (*numrow - 1) * (*numcol);
         strout = calloc(outlen, sizeof(char));
-        int termsize = sizeof(struct termios);
-        tcattr = malloc(termsize);
-        struct termios * modtcattr = malloc(termsize);
-        if (tcgetattr(fdout, modtcattr) != 0) return -1;
-        memcpy(tcattr, modtcattr, termsize);
-        modtcattr->c_lflag &= ~(ECHO | ECHONL | ICANON);
-        if (tcsetattr(fdout, TCSADRAIN, modtcattr) != 0) return -1;
-        free(modtcattr);
+        if (strout == NULL) goto cleanstrin;
+        if (tty_cfg_init(&cfg) != 0) goto cleanstrs;
         return 0;
+cleanstrs:
+        free(strout);
+cleanstrin:
+        free(strin);
+cleanfiles:
+        file_free(&fout);
+cleanfin:
+        file_free(&fin);
+        return -1;
 };
 
 int tty_draw () {
-        if (fputs(strout, fout) == EOF) return -1;
-        char * moveseq = calloc(12, sizeof(char));
+        printf("Putting string...\n");
+        if (file_put_string(fout, strout) != 0) return -1;
+        printf("Put string.\n");
+        char *moveseq = calloc(12, sizeof(char));
+        if (moveseq == NULL) return -1;
         int col = 1;
-        if (string_move_cur(moveseq, &col, &nrow) != 0) return -1;
+        if (string_move_cur(moveseq, &col, &nrow) != 0) goto cleanms;
         int mslen;
-        if (string_count_size(&mslen, moveseq) != 0) return -1;
-        char * inslice = calloc(ncol + mslen, sizeof(char));
-        if (string_cat(inslice, moveseq) != 0) return -1;
+        if (string_count_size(&mslen, moveseq) != 0) goto cleanms;
+        char *inslice = calloc(ncol + mslen, sizeof(char));
+        if (inslice == NULL) goto cleanms;
+        if (string_cat(inslice, moveseq) != 0) goto cleanins;
         mslen--;
-        if (string_copy(inslice, &mslen, strin, &linei, &ncol) != 0) return -1;
+        if (string_copy(inslice, &mslen, strin, &linei, &ncol) != 0) goto cleanins;
         col = curi - linei + 1;
-        if (string_move_cur(moveseq, &col, &nrow) != 0) return -1;
-        if (string_cat(inslice, moveseq) != 0) return -1;
-        if (fputs(inslice, fout) == EOF) return -1;
-        free(moveseq);
+        if (string_move_cur(moveseq, &col, &nrow) != 0) goto cleanins;
+        if (string_cat(inslice, moveseq) != 0) goto cleanins;
+        if (file_put_string(fout, inslice) != 0) goto cleanins;
         free(inslice);
+        free(moveseq);
         return 0;
+cleanins:
+        free(inslice);
+cleanms:
+        free(moveseq);
+        return -1;
 };
 
-int tty_put_out (char * source) {
+int tty_put_out (char *source) {
         strout[0] = LBF_NULL;
         if (string_cat(strout, LBF_RESET) != 0) return -1;
         if (string_cat(strout, source) != 0) return -1;
@@ -69,96 +75,27 @@ int tty_put_out (char * source) {
 };
 
 int tty_get_in (char * dest) {
-        int i = 0;
-        strin[0] = LBF_NULL;
-        curi = 0;
-        linei = 0;
-        char c;
-        bool isesc = false;
-        int elen = LBF_ESCSEQ_LEN;
-        char * ebuf = calloc(elen, sizeof(char));
-        int ei;
-        int ilen;
-        while (feof(fin) == 0) {
-                c = fgetc(fin);
-                if (c == EOF || ferror(fin) != 0) {
-                        errno = EIO;
-                        return -1;
-                };
-                if (c == LBF_RETURN || c == LBF_NEWLINE) {
-                        break;
-                };
-                if (c == LBF_ESCAPE) {
-                        isesc = true;
-                        ebuf[0] = LBF_NULL;
-                        ei = 0;
-                };
-                if (!isesc) {
-                        if (i + 1 < linelen - 1) {
-                                if (curi < i) {
-                                        if (string_ins_char(strin, &curi, &c)
-                                                != 0) return -1;
-                                } else {
-                                        strin[i] = c;
-                                        strin[i+1] = LBF_NULL;
-                                };
-                                i++;
-                                // TODO: core dumped, enter after long line...
-                                if (i >= ncol) {
-                                        linei++;
-                                }
-                                curi++;
-                        };
-                } else {
-                        if (ei >= elen) {
-                                errno = ERANGE;
-                                free(ebuf);
-                                return -1;
-                        };
-                        ebuf[ei] = c;
-                        ebuf[ei+1] = LBF_NULL;
-                        ei++;
-                        if (string_is_equal(ebuf, LBF_LEFT)) {
-                                if (curi > 0) {
-                                        curi--;
-                                        if (curi <= linei) {
-                                                linei = curi;
-                                        };
-                                };
-                                isesc = false;
-                        } else if (string_is_equal(ebuf, LBF_RIGHT)) {
-                                if (string_count_size(&ilen, strin) != 0)
-                                        return -1;
-                                if (curi < ilen - 1) {
-                                        curi++;
-                                        if (curi > linei + ncol) {
-                                                linei = curi - ncol;
-                                        };
-                                };
-                                isesc = false;
-                        } else if (string_is_equal(ebuf, LBF_UP)) {
-                                isesc = false;
-                        } else if (string_is_equal(ebuf, LBF_DOWN)) {
-                                isesc = false;
-                        };
-                };
-                if (tty_draw() != 0) return -1;
-        };
-        free(ebuf);
-        if (string_cat(dest, strin) != 0) return -1;
+        struct lb_kbevent * keybuf = malloc(sizeof(keybuf));
+        if (file_get_key(keybuf, fin) != 0) goto cleankeybuf;
+        printf("\nRead: '%3d'.\n", keybuf->code);
+        free(keybuf);
         return 0;
+cleankeybuf:
+        free(keybuf);
+        return -1;
 };
 
 int tty_free () {
-        if (string_cat(strout, "\n") != 0) return -1;
-        if (string_cat(strin, "\n") != 0) return -1;
-        if (tty_draw() != 0) return -1;
-        if (tcsetattr(fdout, TCSADRAIN, tcattr) != 0) return -1;
-        free(tcattr);
+        int result = 0;
+        if (string_cat(strout, "\n") != 0) result = -1;
+        if (string_cat(strin, "\n") != 0) result = -1;
+        if (tty_draw() != 0) result = -1;
+        if (tty_cfg_free(&cfg) != 0) result = -1;
+        if (file_free(&fin) != 0) result = -1;
+        if (file_free(&fout) != 0) result = -1;
         free(strin);
         free(strout);
-        tcattr = NULL;
         strin = NULL;
         strout = NULL;
-        return 0;
+        return result;
 };
