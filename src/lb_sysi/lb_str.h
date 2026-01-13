@@ -3,15 +3,27 @@
 
 #include <errno.h>
 #include <signal.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "lb_bool.h"
+
+#define LBF_MAX_STR_LEN 4000
 // Large enough to hold most escape sequences, including null character.
 #define LBF_ESCSEQ_LEN 12
 // Designing for 80x8, not expecting more than 3 digits in a number.
 #define LBF_NUMSEQ_LEN 4
 #define LBF_NUMBASE 10
+#define LBF_NUMBERS "0123456789"
+// Character definitions
+#define LBF_NULL '\0'
+#define LBF_BACKSPACE '\010'
+#define LBF_NEWLINE '\012'
+#define LBF_RETURN '\015'
+#define LBF_ESCAPE '\033'
+#define LBF_DELETE '\177'
+#define LBF_OSB '['
+#define LBF_MINUS '-'
 
 // Escape Sequence end codes
 #define LBF_ES_UP 'A'
@@ -24,17 +36,6 @@
 #define LBF_ES_ALIGN_LEFT 'L'
 #define LBF_ES_ALIGN_CENTER 'C'
 #define LBF_ES_ALIGN_RIGHT 'R'
-
-// Character definitions
-#define LBF_NULL '\0'
-#define LBF_BACKSPACE '\010'
-#define LBF_NEWLINE '\012'
-#define LBF_RETURN '\015'
-#define LBF_ESCAPE '\033'
-#define LBF_DELETE '\177'
-#define LBF_NUMBERS "0123456789"
-#define LBF_OSB '['
-#define LBF_MINUS '-'
 
 // Custom escape sequences
 #define LBF_ALIGN_LEFT "\033[[*;L"
@@ -68,19 +69,26 @@
 #define LBF_FG_BR_WHITE "\033[97m"
 #define LBF_FG_RESET "\033[0m"
 
-int string_count_vis (int * dest, char * source);
-int string_count_size (int * dest, char * source);
-bool string_is_equal (char * subject, char * target);
-int string_del (char * str, int * index, int * count);
-int string_ins_char (char * dest, int * index, char * source);
-int string_ins_string (char * dest, int * d_idx, char * source, int * s_idx,
-                       int * count);
-int string_copy (char * dest, int * d_idx, char * source, int * s_idx,
-                 int * count);
-int string_cat (char * dest, char * source);
-int int_from_char (int * dest, char * source);
-int int_from_string (int * dest, char * source);
-int string_from_int (char * dest, int * source);
-int string_move_cur (char * dest, int * x, int * y);
+struct lb_str {
+        char *chars;
+        int size;
+};
+
+int str_from_charcount (struct lb_str **dest, const int *charcount);
+int str_from_chars (struct lb_str **dest, const char *src);
+int count_str_chars (int *dest, const struct lb_str *src);
+int char_from_str (char *dest, const struct lb_str *src, const int *i);
+int comp_str_str (int *dest, const struct lb_str *src_a,
+                  const struct lb_str *src_b);
+int str_ins_str (struct lb_str *dest, const int *di, const struct lb_str *src,
+                 const int *si, const int *count);
+int str_cat_char (struct lb_str *dest, const char *src);
+int str_cat_str (struct lb_str *dest, const struct lb_str *src);
+int str_from_int (struct lb_str **dest, const int *src);
+int str_del_charcount (struct lb_str *str, const int *i, const int *count);
+int str_del_all (struct lb_str *str);
+int str_free (struct lb_str **dest);
+
+int str_from_curpos (struct lb_str **dest, const int *x, const int *y);
 
 #endif /* LB_STRING_H */

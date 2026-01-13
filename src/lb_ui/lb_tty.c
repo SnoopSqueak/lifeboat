@@ -5,8 +5,8 @@ static int linei;
 static int nrow;
 static int ncol;
 static int linelen;
-static char *strin;
-static char *strout;
+static struct lb_string *strin;
+static struct lb_string *strout;
 static struct lb_file *fin;
 static struct lb_file *fout;
 static struct lb_tty_cfg *cfg;
@@ -19,17 +19,15 @@ int tty_init (int *numcol, int *numrow, int *maxlinelen) {
         linelen = *maxlinelen;
         if (file_init_tty_in(&fin) != 0) return -1;
         if (file_init_tty_out(&fout) != 0) goto cleanfin;
-        strin = calloc(*maxlinelen, sizeof(char));
-        if (strin == NULL) goto cleanfiles;
+        if (string_init(&strin, maxlinelen) != 0) goto cleanfiles;
         int outlen = (*maxlinelen) * (*numrow - 1) * (*numcol);
-        strout = calloc(outlen, sizeof(char));
-        if (strout == NULL) goto cleanstrin;
+        if (string_init(&strout, &outlen) != 0) goto cleanstrin;
         if (tty_cfg_init(&cfg) != 0) goto cleanstrs;
         return 0;
 cleanstrs:
-        free(strout);
+        string_free(&strout);
 cleanstrin:
-        free(strin);
+        string_free(&strin);
 cleanfiles:
         file_free(&fout);
 cleanfin:
@@ -38,9 +36,7 @@ cleanfin:
 };
 
 int tty_draw () {
-        printf("Putting string...\n");
         if (file_put_string(fout, strout) != 0) return -1;
-        printf("Put string.\n");
         char *moveseq = calloc(12, sizeof(char));
         if (moveseq == NULL) return -1;
         int col = 1;

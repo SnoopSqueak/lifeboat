@@ -1,7 +1,6 @@
 #ifndef LB_UI_H
 #define LB_UI_H
 
-#include "lb_state.h"
 #include "lb_sysi/lb_string.h"
 #include "lb_ui/lb_tty.h"
 

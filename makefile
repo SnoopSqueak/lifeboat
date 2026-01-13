@@ -9,15 +9,14 @@ lb_main=$(bdir)/lb_main.o
 ssysi=$(sdir)/lb_sysi
 bsysi=$(bdir)/lb_sysi
 lb_io=$(bsysi)/lb_io.o
-lb_string=$(bsysi)/lb_string.o
-lb_threads=$(bsysi)/lb_threads.o
+lb_str=$(bsysi)/lb_str.o
 
 sui=$(sdir)/lb_ui
 bui=$(bdir)/lb_ui
 lb_view=$(bui)/lb_view.o
 lb_tty=$(bui)/lb_tty.o
 
-OBJ=$(lb_io) $(lb_string) $(lb_threads)
+OBJ=$(lb_io) $(lb_str)
 OBJ+= $(lb_view) $(lb_tty)
 
 TEST_TARGET=TestLifeBoat
@@ -55,7 +54,6 @@ $(lb_main) : $(sdir)/lb_main.c $(sdir)/lb_main.h $(bdir)/
 	@echo building $(*F) with $(CC)
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-
 $(lb_tty) : $(sui)/lb_tty.c $(sui)/lb_tty.h $(bui)/
 	@echo building $(*F) with $(CC)
 	@$(CC) $(CFLAGS) -c $< -o $@
@@ -64,19 +62,13 @@ $(lb_view) : $(sui)/lb_view.c $(sui)/lb_view.h $(bui)/
 	@echo building $(*F) with $(CC)
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-
-$(lb_threads) : $(ssysi)/lb_threads.c $(ssysi)/lb_threads.h $(bsysi)/
-	@echo building $(*F) with $(CC)
-	@$(CC) $(CFLAGS) -c $(ssysi)/$(*F).c -o $@
-
-$(lb_string) : $(ssysi)/lb_string.c $(ssysi)/lb_string.h $(bsysi)/
+$(lb_str) : $(ssysi)/lb_str.c $(ssysi)/lb_str.h $(bsysi)/
 	@echo building $(*F) with $(CC)
 	@$(CC) $(CFLAGS) -c $(ssysi)/$(*F).c -o $@
 
 $(lb_io) : $(ssysi)/lb_io.c $(ssysi)/lb_io.h $(bsysi)/
 	@echo building $(*F) with $(CC)
 	@$(CC) $(CFLAGS) -c $(ssysi)/$(*F).c -o $@
-
 
 $(bdir)/ :
 	@mkdir $@
@@ -131,10 +123,12 @@ $(tbdir)/test_lb_sysi/test_%.o : $(tudir)/test_lb_sysi/test_%.c $(tbdir)/test_lb
 	@echo building test_$(*F) with $(CC)
 	@$(CC) $(TEST_CFLAGS) -c $< -o $@
 
-$(tedir)/test_lb_sysi/test_lb_string : $(tbdir)/test_lb_sysi/test_lb_string.o $(bdir)/lb_sysi/lb_string.o $(tbdir)/munit.o $(tedir)/test_lb_sysi/
-	@echo building bin test_lb_string with $(CC)
-	@$(CC) $(TEST_CFLAGS) $< $(bdir)/lb_sysi/lb_string.o $(testlib) -o $@
+$(tedir)/test_lb_sysi/test_lb_str : $(tbdir)/test_lb_sysi/test_lb_str.o $(bdir)/lb_sysi/lb_str.o $(tbdir)/munit.o $(tedir)/test_lb_sysi/
+	@echo building bin test_lb_str with $(CC)
+	@$(CC) $(TEST_CFLAGS) $< $(bdir)/lb_sysi/lb_str.o $(testlib) -o $@
 
+.PHONY : teststr
+teststr : cleanall $(tedir)/test_lb_sysi/test_lb_str
 
 .PHONY : cleanall
 cleanall : clean cleantests

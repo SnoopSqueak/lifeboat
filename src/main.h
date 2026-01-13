@@ -13,6 +13,6 @@
 #define TERM_ROWS 8
 #define TERM_COLS 80
 
-int main (int argc, char ** argv);
+void main (int argc, char ** argv);
 
 #endif /* MAIN_H */
