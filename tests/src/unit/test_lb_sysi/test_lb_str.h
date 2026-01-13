@@ -7,12 +7,17 @@
 
 static MunitResult test_str_from_charcount (const MunitParameter params[],
                                             void * data) {
-        const int count = 5;
+        int count = 5;
         struct lb_str *str;
         munit_assert_int(str_from_charcount(&str, &count), ==, 0);
         munit_assert_not_null(str->chars);
         munit_assert_int(str->size, ==, 5);
         munit_assert_int(str_free(&str), ==, 0);
+        munit_assert_null(str);
+        count = LBF_MAX_STR_LEN * 2;
+        munit_assert_int(str_from_charcount(&str, &count), !=, 0);
+        munit_assert_int(str_free(&str), ==, 0);
+        munit_assert_null(str);
         return MUNIT_OK;
 };
 
@@ -23,6 +28,7 @@ static MunitResult test_str_from_chars (const MunitParameter params[],
         munit_assert_int(str_from_chars(&str, val), ==, 0);
         munit_assert_string_equal(str->chars, val);
         munit_assert_int(str_free(&str), ==, 0);
+        munit_assert_null(str);
         return MUNIT_OK;
 };
 
@@ -145,25 +151,16 @@ static MunitResult test_str_from_int (const MunitParameter params[],
 };
 
 static MunitResult test_str_del_charcount (const MunitParameter params[],
-                                 void * data) {
-        return MUNIT_SKIP;
-        // char * str = malloc(32 * sizeof(char));
-        // munit_assert_int(str_cat(str, "Hello, lousy world!"), ==, 0);
-        // int index, count;
-        // index = 0;
-        // count = 0;
-        // munit_assert_int(str_del(str, &index, &count), ==, 0);
-        // munit_assert_str_equal(str, str);
-        // index = 7;
-        // count = 6;
-        // munit_assert_int(str_del(str, &index, &count), ==, 0);
-        // munit_assert_str_equal(str, "Hello, world!");
-        // free(str);
-        // return MUNIT_OK;
+                                           void * data) {
+        struct lb_str *str;
+        const int i = 7, count = 6;
+        munit_assert_int(str_from_chars(&str, "Hello, cruel world!"), ==, 0);
+        munit_assert_int(str_del_charcount(str, &i, &count), ==, 0);
+        munit_assert_string_equal(str->chars, "Hello, world!");
+        munit_assert_int(str->size, >=, 14);
+        munit_assert_int(str_free(&str), ==, 0);
+        return MUNIT_OK;
 };
-// int str_del_charcount (struct lb_str *str, const int *i, const int *count);
-// {(char*) "/str/del/count", test_str_del_charcount, NULL, NULL,
-//         MUNIT_TEST_OPTION_NONE, NULL},
 
 static MunitResult test_str_del_all (const MunitParameter params[],
                                      void * data) {
@@ -202,7 +199,7 @@ static MunitTest lb_str_tests[] = {
         {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}
 };
 
-static const MunitSuite lb_str_suite = {(char*) "/lb_str",
-        lb_str_tests, NULL, 1, MUNIT_SUITE_OPTION_NONE};
+static const MunitSuite lb_str_suite = {(char*) "/lb_str", lb_str_tests,
+        NULL, 1, MUNIT_SUITE_OPTION_NONE};
 
 #endif /* TEST_LB_STRING_H */

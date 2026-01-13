@@ -11,7 +11,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "lb_string.h"
+#include "lb_str.h"
 
 struct lb_file;
 struct lb_tty_cfg;
@@ -22,7 +22,7 @@ struct lb_kbevent {
 
 int file_init_tty_in (struct lb_file **dest);
 int file_init_tty_out (struct lb_file **dest);
-int file_put_string (struct lb_file *dest, struct lb_string *str);
+int file_put_string (struct lb_file *dest, struct lb_str *str);
 int file_get_key (struct lb_kbevent *dest, struct lb_file *source);
 int file_free (struct lb_file **dest);
 int tty_cfg_init (struct lb_tty_cfg **dest);

@@ -5,7 +5,13 @@ static const int AS_FIRSTNUM = 48;
 int count_chars (int *dest, const char *src) {
         if (src == NULL || dest == NULL) return -1;
         *dest = 0;
-        while (src[*dest] != LBF_NULL) (*dest)++;
+        while (src[*dest] != LBF_NULL) {
+                (*dest)++;
+                if (*dest >= LBF_MAX_STR_LEN - 1) {
+                        errno = ERANGE;
+                        return -1;
+                };
+        };
         (*dest)++;
         return 0;
 };
@@ -59,7 +65,7 @@ int int_from_chars (int *dest, const char *src) {
 };
 
 int str_from_charcount (struct lb_str **dest, const int *charcount) {
-        if (*charcount < 1) return -1;
+        if (*charcount < 1 || *charcount > LBF_MAX_STR_LEN) return -1;
         *dest = malloc(sizeof(struct lb_str));
         if (*dest == NULL) return -1;
         (*dest)->chars = calloc(*charcount, sizeof(char));
@@ -93,8 +99,7 @@ int str_ins_chars (struct lb_str *dest, const int *di, const char *src,
                 };
                 dest->chars = realloc(dest->chars, dest->size);
         };
-        if (chars_ins_chars(dest->chars, di, src, si, count) != 0)
-                return -1;
+        if (chars_ins_chars(dest->chars, di, src, si, count) != 0) return -1;
         return 0;
 };
 
@@ -105,8 +110,7 @@ int str_from_chars (struct lb_str **dest, const char *src) {
         if (count_chars(&count, src) != 0) return -1;
         if (str_from_charcount(dest, &count) != 0) return -1;
         if (!valid_str(*dest)) return -1;
-        if (str_ins_chars(*dest, &i, src, &i, &count) != 0)
-                goto cleandest;
+        if (str_ins_chars(*dest, &i, src, &i, &count) != 0) goto cleandest;
         return 0;
 cleandest:
         str_free(dest);
@@ -192,7 +196,7 @@ int str_from_int (struct lb_str **dest, const int *src) {
         };
         int size = LBF_NUMSEQ_LEN, n = *src, i = 0, si;
         const int amt = 1, isneg = n < 0 ? LB_TRUE : LB_FALSE;
-        const char *numstr = LBF_NUMBERS, negchar = LBF_MINUS, nulchar = LBF_NULL;
+        const char *nstr = LBF_NUMBERS, negch = LBF_MINUS, nulch = LBF_NULL;
         if (str_from_charcount(dest, &size) != 0) return -1;
         if (!valid_str(*dest) || src == NULL) return -1;
         if (isneg) {
@@ -201,13 +205,15 @@ int str_from_int (struct lb_str **dest, const int *src) {
         };
         while (n != 0) {
                 si = n % LBF_NUMBASE;
-                if (str_ins_chars(*dest, &i, numstr, &si, &amt) != 0)
+                if (str_ins_chars(*dest, &i, nstr, &si, &amt) != 0)
                         goto cleandest;
                 i++;
                 n = n/10;
         };
-        if (isneg) if (str_cat_char(*dest, &negchar) != 0) goto cleandest;
-        if (str_cat_char(*dest, &nulchar) != 0) goto cleandest;
+        if (isneg) {
+                if (str_cat_char(*dest, &negch) != 0) goto cleandest;
+        };
+        if (str_cat_char(*dest, &nulch) != 0) goto cleandest;
         if (str_reverse(*dest) != 0) goto cleandest;
         return 0;
 cleandest:
@@ -251,8 +257,8 @@ int str_free (struct lb_str **dest) {
 
 int str_from_curpos (struct lb_str **dest, const int *x, const int *y) {
         const int seqsize = LBF_ESCSEQ_LEN;
-        const char cesc = LBF_ESCAPE, cobs = LBF_OSB, cmov = LBF_ES_MOVE;
-        const char csem = ';';
+        const char cesc = LBF_ESCAPE, cobs = LBF_OSB, cmov = LBF_ES_MOVE,
+        csem = LBF_SEMICOLON;
         if (str_from_charcount(dest, &seqsize) != 0) return -1;
         if (str_cat_char(*dest, &cesc) != 0) goto cleandest;
         if (str_cat_char(*dest, &cobs) != 0) goto cleandest;
@@ -265,7 +271,7 @@ int str_from_curpos (struct lb_str **dest, const int *x, const int *y) {
         if (str_from_int(&coord, x) != 0) goto cleancoord;
         if (str_cat_str(*dest, coord) != 0) goto cleancoord;
         if (str_free(&coord) != 0) goto cleancoord;
-        if (str_cat_char(*dest, &cmov) != 0) goto cleancoord;
+        if (str_cat_char(*dest, &cmov) != 0) goto cleandest;
         return 0;
 cleancoord:
         str_free(&coord);

@@ -24,6 +24,7 @@
 #define LBF_DELETE '\177'
 #define LBF_OSB '['
 #define LBF_MINUS '-'
+#define LBF_SEMICOLON ';'
 
 // Escape Sequence end codes
 #define LBF_ES_UP 'A'
