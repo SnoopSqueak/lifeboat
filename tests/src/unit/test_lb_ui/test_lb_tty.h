@@ -2,7 +2,7 @@
 #define TEST_LB_TTY_H
 
 #include "munit.h"
-#include "lb_sysi/lb_string.h"
+// #include "lb_sysi/lb_str.h"
 #include "lb_ui/lb_tty.h"
 
 #include <stdio.h>

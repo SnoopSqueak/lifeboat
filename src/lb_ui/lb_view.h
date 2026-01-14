@@ -1,7 +1,8 @@
 #ifndef LB_UI_H
 #define LB_UI_H
 
-#include "lb_sysi/lb_string.h"
+#include "lb_sysi/lb_fmt.h"
+#include "lb_sysi/lb_str.h"
 #include "lb_ui/lb_tty.h"
 
 //~ struct lb_cmd {
@@ -12,7 +13,7 @@
         //~ int (* handler)(char ** argv);
 //~ };
 
-int format_line (char * dest, int * ncol, char * front, char * mid, char * end);
-int view_landing (int * ncol, int * nrow, char * swname, char * swvers);
+int view_landing (int *ncol, int *nrow, struct lb_str *swname,
+                  struct lb_str *swvers);
 
 #endif /* LB_UI_H */

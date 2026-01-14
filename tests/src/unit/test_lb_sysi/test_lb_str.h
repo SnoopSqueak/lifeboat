@@ -12,11 +12,11 @@ static MunitResult test_str_from_charcount (const MunitParameter params[],
         munit_assert_int(str_from_charcount(&str, &count), ==, 0);
         munit_assert_not_null(str->chars);
         munit_assert_int(str->size, ==, 5);
-        munit_assert_int(str_free(&str), ==, 0);
+        munit_assert_int(free_str(&str), ==, 0);
         munit_assert_null(str);
         count = LBF_MAX_STR_LEN * 2;
         munit_assert_int(str_from_charcount(&str, &count), !=, 0);
-        munit_assert_int(str_free(&str), ==, 0);
+        munit_assert_int(free_str(&str), ==, 0);
         munit_assert_null(str);
         return MUNIT_OK;
 };
@@ -27,7 +27,7 @@ static MunitResult test_str_from_chars (const MunitParameter params[],
         struct lb_str *str;
         munit_assert_int(str_from_chars(&str, val), ==, 0);
         munit_assert_string_equal(str->chars, val);
-        munit_assert_int(str_free(&str), ==, 0);
+        munit_assert_int(free_str(&str), ==, 0);
         munit_assert_null(str);
         return MUNIT_OK;
 };
@@ -40,7 +40,7 @@ static MunitResult test_count_str_chars (const MunitParameter params[],
         munit_assert_int(str_from_chars(&str, val), ==, 0);
         munit_assert_int(count_str_chars(&count, str), ==, 0);
         munit_assert_int(count, ==, 14);
-        munit_assert_int(str_free(&str), ==, 0);
+        munit_assert_int(free_str(&str), ==, 0);
         return MUNIT_OK;
 };
 
@@ -59,7 +59,7 @@ static MunitResult test_char_from_str (const MunitParameter params[],
         i = 100;
         munit_assert_int(char_from_str(&c, str, &i), ==, -1);
         munit_assert_char(c, ==, ',');
-        munit_assert_int(str_free(&str), ==, 0);
+        munit_assert_int(free_str(&str), ==, 0);
         return MUNIT_OK;
 };
 
@@ -79,9 +79,9 @@ static MunitResult test_comp_str_str (const MunitParameter params[],
         munit_assert_int(comp_str_str(&iseql, str1, str3), ==, 0);
         munit_assert_int(iseql, ==, LB_TRUE);
         munit_assert_string_equal(str1->chars, str3->chars);
-        munit_assert_int(str_free(&str1), ==, 0);
-        munit_assert_int(str_free(&str2), ==, 0);
-        munit_assert_int(str_free(&str3), ==, 0);
+        munit_assert_int(free_str(&str1), ==, 0);
+        munit_assert_int(free_str(&str2), ==, 0);
+        munit_assert_int(free_str(&str3), ==, 0);
         return MUNIT_OK;
 };
 
@@ -96,8 +96,8 @@ static MunitResult test_str_ins_str (const MunitParameter params[],
         munit_assert_not_null(str_b->chars);
         munit_assert_int(str_ins_str(str_a, &di, str_b, &si, &bcount), ==, 0);
         munit_assert_string_equal(str_a->chars, str_b->chars);
-        munit_assert_int(str_free(&str_a), ==, 0);
-        munit_assert_int(str_free(&str_b), ==, 0);
+        munit_assert_int(free_str(&str_a), ==, 0);
+        munit_assert_int(free_str(&str_b), ==, 0);
         return MUNIT_OK;
 };
 
@@ -113,7 +113,7 @@ static MunitResult test_str_cat_char (const MunitParameter params[],
         c = 'F';
         munit_assert_int(str_cat_char(str, &c), ==, 0);
         munit_assert_string_equal(str->chars, "ABCDEF");
-        munit_assert_int(str_free(&str), ==, 0);
+        munit_assert_int(free_str(&str), ==, 0);
         return MUNIT_OK;
 };
 
@@ -127,8 +127,8 @@ static MunitResult test_str_cat_str (const MunitParameter params[],
         munit_assert_int(str_cat_str(str1, str2), ==, 0);
         munit_assert_string_equal(str1->chars, "Hello, world!");
         munit_assert_string_equal(str2->chars, ", world!");
-        munit_assert_int(str_free(&str1), ==, 0);
-        munit_assert_int(str_free(&str2), ==, 0);
+        munit_assert_int(free_str(&str1), ==, 0);
+        munit_assert_int(free_str(&str2), ==, 0);
         return MUNIT_OK;
 };
 
@@ -138,15 +138,15 @@ static MunitResult test_str_from_int (const MunitParameter params[],
         struct lb_str *str;
         munit_assert_int(str_from_int(&str, &src), ==, 0);
         munit_assert_string_equal(str->chars, "365");
-        munit_assert_int(str_free(&str), ==, 0);
+        munit_assert_int(free_str(&str), ==, 0);
         src = -12345;
         munit_assert_int(str_from_int(&str, &src), ==, 0);
         munit_assert_string_equal(str->chars, "-12345");
-        munit_assert_int(str_free(&str), ==, 0);
+        munit_assert_int(free_str(&str), ==, 0);
         src = 0;
         munit_assert_int(str_from_int(&str, &src), ==, 0);
         munit_assert_string_equal(str->chars, "0");
-        munit_assert_int(str_free(&str), ==, 0);
+        munit_assert_int(free_str(&str), ==, 0);
         return MUNIT_OK;
 };
 
@@ -158,7 +158,7 @@ static MunitResult test_str_del_charcount (const MunitParameter params[],
         munit_assert_int(str_del_charcount(str, &i, &count), ==, 0);
         munit_assert_string_equal(str->chars, "Hello, world!");
         munit_assert_int(str->size, >=, 14);
-        munit_assert_int(str_free(&str), ==, 0);
+        munit_assert_int(free_str(&str), ==, 0);
         return MUNIT_OK;
 };
 
@@ -169,7 +169,7 @@ static MunitResult test_str_del_all (const MunitParameter params[],
         munit_assert_int(str_del_all(str), ==, 0);
         munit_assert_string_equal(str->chars, "");
         munit_assert_int(str->size, >=, 5);
-        munit_assert_int(str_free(&str), ==, 0);
+        munit_assert_int(free_str(&str), ==, 0);
         return MUNIT_OK;
 };
 

@@ -28,7 +28,10 @@ void lb_main (int *ncol, int *nrow, int *maxlinelength) {
         if (signal(SIGTERM, sig_err) != 0) goto exiterr;
         if (signal(SIGILL, sig_err) != 0) goto exiterr;
         if (tty_init(ncol, nrow, maxlinelength) != 0) goto exiterr;
-        if (view_landing(ncol, nrow, SOFTWARE_NAME, SOFTWARE_VERSION) != 0) goto exiterr;
+        struct lb_str *swname, *swvers;
+        if (str_from_chars(&swname, SOFTWARE_NAME) != 0) goto exiterr;
+        if (str_from_chars(&swvers, SOFTWARE_VERSION) != 0) goto exiterr;
+        if (view_landing(ncol, nrow, swname, swvers) != 0) goto exiterr;
         char *usrbuf = calloc(*maxlinelength, sizeof(char));
         if (tty_get_in(usrbuf) != 0) goto exiterr;
         printf("\nUsr input: '%s'.\n", usrbuf);

@@ -27,25 +27,23 @@ int file_init_tty_out (struct lb_file **dest) {
         return file_init(dest, stdout, &fileno);
 };
 
-int file_put_string (struct lb_file *dest, struct lb_string *source) {
+int file_put_str (struct lb_file *dest, const struct lb_str *source) {
         int size;
-        if (string_get_size(&size, source) != 0) return -1;
-        if (fputs(source->chars, dest->file) == EOF) goto cleanschars;
+        if (count_str_chars(&size, source) != 0) return -1;
+        if (fputs(source->chars, dest->file) == EOF) return -1;
         return 0;
-cleanschars:
-        free(schars);
-        return -1;
 };
 
-int file_get_key (struct lb_kbevent *dest, struct lb_file *source) {
-        char * keybuf = calloc(18, sizeof(char));
+int file_get_key (struct lb_kbevent *dest, const struct lb_file *source) {
+        char *keybuf = calloc(18, sizeof(char));
         int i, n;
         while (feof(source->file) == 0) {
                 n = read(source->fileno, keybuf, sizeof(keybuf));
                 if (n != 1 && n != 3) goto cleankeybuf;
                 i = 0;
                 while (i < n) {
-                        dest->is_press = ~(keybuf[i] & 0x80);
+                        dest->is_press = LB_TRUE;
+                        // dest->is_press = ~(keybuf[i] & 0x80) ? LB_TRUE : LB_FALSE;
                         if (i + 2 < n && (keybuf[i] & 0x7f) == 0
                                 && (keybuf[i + 1] & 0x80) != 0
                                 && (keybuf[i + 2] & 0x80) != 0) {
@@ -73,6 +71,7 @@ cleankeybuf:
 int file_free (struct lb_file **dest) {
         if (*dest == NULL) return -1;
         free(*dest);
+        *dest = NULL;
         return 0;
 };
 
@@ -93,6 +92,7 @@ int tty_cfg_init (struct lb_tty_cfg **dest) {
         return 0;
 cleandest:
         free(*dest);
+        *dest = NULL;
 cleantcattr:
         free(tcattr);
         return -1;

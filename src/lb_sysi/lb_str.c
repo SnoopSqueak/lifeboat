@@ -64,6 +64,11 @@ int int_from_chars (int *dest, const char *src) {
         return 0;
 };
 
+int valid_str (const struct lb_str *str) {
+        if (str == NULL || str->chars == NULL) return LB_FALSE;
+        return LB_TRUE;
+};
+
 int str_from_charcount (struct lb_str **dest, const int *charcount) {
         if (*charcount < 1 || *charcount > LBF_MAX_STR_LEN) return -1;
         *dest = malloc(sizeof(struct lb_str));
@@ -72,15 +77,11 @@ int str_from_charcount (struct lb_str **dest, const int *charcount) {
         if ((*dest)->chars == NULL) goto cleandest;
         (*dest)->size = *charcount;
         (*dest)->chars[0] = LBF_NULL;
+        if (!valid_str(*dest)) return -1;
         return 0;
 cleandest:
         free(*dest);
         return -1;
-};
-
-int valid_str (const struct lb_str *str) {
-        if (str == NULL || str->chars == NULL) return LB_FALSE;
-        return LB_TRUE;
 };
 
 int str_ins_chars (struct lb_str *dest, const int *di, const char *src,
@@ -109,11 +110,10 @@ int str_from_chars (struct lb_str **dest, const char *src) {
         int count;
         if (count_chars(&count, src) != 0) return -1;
         if (str_from_charcount(dest, &count) != 0) return -1;
-        if (!valid_str(*dest)) return -1;
         if (str_ins_chars(*dest, &i, src, &i, &count) != 0) goto cleandest;
         return 0;
 cleandest:
-        str_free(dest);
+        free_str(dest);
         return -1;
 };
 
@@ -217,7 +217,7 @@ int str_from_int (struct lb_str **dest, const int *src) {
         if (str_reverse(*dest) != 0) goto cleandest;
         return 0;
 cleandest:
-        str_free(dest);
+        free_str(dest);
         return -1;
 };
 
@@ -245,7 +245,7 @@ int str_del_all (struct lb_str *str) {
         return 0;
 };
 
-int str_free (struct lb_str **dest) {
+int free_str (struct lb_str **dest) {
         if (dest == NULL) return -1;
         if (*dest != NULL) {
                 if ((*dest)->chars != NULL) free((*dest)->chars);
@@ -254,29 +254,3 @@ int str_free (struct lb_str **dest) {
         };
         return 0;
 };
-
-int str_from_curpos (struct lb_str **dest, const int *x, const int *y) {
-        const int seqsize = LBF_ESCSEQ_LEN;
-        const char cesc = LBF_ESCAPE, cobs = LBF_OSB, cmov = LBF_ES_MOVE,
-        csem = LBF_SEMICOLON;
-        if (str_from_charcount(dest, &seqsize) != 0) return -1;
-        if (str_cat_char(*dest, &cesc) != 0) goto cleandest;
-        if (str_cat_char(*dest, &cobs) != 0) goto cleandest;
-        struct lb_str *coord;
-        if (str_from_int(&coord, y) != 0) goto cleandest;
-        if (coord == NULL || coord->chars == NULL) goto cleandest;
-        if (str_cat_str(*dest, coord) != 0) goto cleancoord;
-        if (str_cat_char(*dest, &csem) != 0) goto cleancoord;
-        if (str_free(&coord) != 0) goto cleandest;
-        if (str_from_int(&coord, x) != 0) goto cleancoord;
-        if (str_cat_str(*dest, coord) != 0) goto cleancoord;
-        if (str_free(&coord) != 0) goto cleancoord;
-        if (str_cat_char(*dest, &cmov) != 0) goto cleandest;
-        return 0;
-cleancoord:
-        str_free(&coord);
-cleandest:
-        str_free(dest);
-        return -1;
-};
-
