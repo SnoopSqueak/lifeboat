@@ -8,7 +8,7 @@
 
 #include "lb_bool.h"
 
-#define LBF_MAX_STR_LEN 4000
+#define LBF_MAX_STR_LEN 65534
 // Large enough to hold most escape sequences, including null character.
 #define LBF_ESCSEQ_LEN 12
 // Designing for 80x8, not expecting more than 3 digits in a number.
@@ -24,11 +24,13 @@
 
 struct lb_str {
         char *chars;
-        int size;
+        unsigned int size;
 };
 
-int str_from_charcount (struct lb_str **dest, const int *charcount);
-int str_from_chars (struct lb_str **dest, const char *src);
+int init_str_charcount (struct lb_str **dest, const int *charcount);
+int init_str_str (struct lb_str **dest, const struct lb_str *src);
+int init_str_chars (struct lb_str **dest, const char *src);
+int init_str_int (struct lb_str **dest, const int *src);
 int count_str_chars (int *dest, const struct lb_str *src);
 int char_from_str (char *dest, const struct lb_str *src, const int *i);
 int comp_str_str (int *dest, const struct lb_str *src_a,
@@ -36,8 +38,8 @@ int comp_str_str (int *dest, const struct lb_str *src_a,
 int str_ins_str (struct lb_str *dest, const int *di, const struct lb_str *src,
                  const int *si, const int *count);
 int str_cat_char (struct lb_str *dest, const char *src);
+int str_cat_chars (struct lb_str *dest, const char *src);
 int str_cat_str (struct lb_str *dest, const struct lb_str *src);
-int str_from_int (struct lb_str **dest, const int *src);
 int str_del_charcount (struct lb_str *str, const int *i, const int *count);
 int str_del_all (struct lb_str *str);
 int free_str (struct lb_str **dest);

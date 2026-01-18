@@ -1,15 +1,15 @@
 #include "lb_tty.h"
 
-static int curi;
-static int linei;
-static int nrow;
-static int ncol;
-static int linelen;
-static struct lb_str *strin;
-static struct lb_str *strout;
-static struct lb_file *fin;
-static struct lb_file *fout;
-static struct lb_tty_cfg *cfg;
+int curi;
+int linei;
+int nrow;
+int ncol;
+int linelen;
+struct lb_str *strin;
+struct lb_str *strout;
+struct lb_file *fin;
+struct lb_file *fout;
+struct lb_tty_cfg *cfg;
 
 int tty_init (int *numcol, int *numrow, int *maxlinelen) {
         curi = 0;
@@ -17,29 +17,30 @@ int tty_init (int *numcol, int *numrow, int *maxlinelen) {
         nrow = *numrow;
         ncol = *numcol;
         linelen = *maxlinelen;
-        if (file_init_tty_in(&fin) != 0) return -1;
-        if (file_init_tty_out(&fout) != 0) goto cleanfin;
-        if (str_from_charcount(&strin, maxlinelen) != 0) goto cleanfiles;
-        int outlen = (*maxlinelen) * (*numrow - 1) * (*numcol);
-        if (str_from_charcount(&strout, &outlen) != 0) goto cleanstrin;
-        if (tty_cfg_init(&cfg) != 0) goto cleanstrs;
+        if (init_file_stdin(&fin) != 0) return -1;
+        if (init_file_stdout(&fout) != 0) goto cleanfin;
+        if (init_str_charcount(&strin, &linelen) != 0) goto cleanfiles;
+        int outlen = (*numrow) * ((*numcol) + 1) * 2;
+        if (init_str_charcount(&strout, &outlen) != 0) goto cleanstrin;
+        if (init_tty_cfg(&cfg) != 0) goto cleanstrs;
         return 0;
 cleanstrs:
         free_str(&strout);
 cleanstrin:
         free_str(&strin);
 cleanfiles:
-        file_free(&fout);
+        free_file(&fout);
 cleanfin:
-        file_free(&fin);
+        free_file(&fin);
         return -1;
 };
 
 int tty_draw () {
+        if (file_put_clear(fout) != 0) return -1;
         if (file_put_str(fout, strout) != 0) return -1;
         struct lb_str *inslice;
         int col = 1, islen = LBF_ESCSEQ_LEN;
-        if (str_from_charcount(&inslice, &islen) != 0) return -1;
+        if (init_str_charcount(&inslice, &islen) != 0) return -1;
         if (fmt_move_cur(inslice, &col, &nrow) != 0) goto cleanins;
         if (str_cat_str(inslice, strin) != 0) goto cleanins;
         col = curi - linei + 1;
@@ -72,13 +73,14 @@ cleankeybuf:
 
 int tty_free () {
         int result = 0;
-        if (fmt_newline(strout) != 0) return -1;
-        if (fmt_newline(strin) != 0) return -1;
+        // for (int i = 0; i < nrow; i++) {
+        // if (fmt_newline(strout) != 0) return -1;
+        // };
         if (tty_draw() != 0) result = -1;
-        if (tty_cfg_free(&cfg) != 0) result = -1;
-        if (file_free(&fin) != 0) result = -1;
-        if (file_free(&fout) != 0) result = -1;
-        free_str(&strin);
-        free_str(&strout);
+        if (free_tty_cfg(&cfg) != 0) result = -1;
+        if (free_file(&fin) != 0) result = -1;
+        if (free_file(&fout) != 0) result = -1;
+        if (free_str(&strin) != 0) result = -1;
+        if (free_str(&strout) != 0) result = -1;
         return result;
 };

@@ -13,7 +13,7 @@
         //~ int (* handler)(char ** argv);
 //~ };
 
-int view_landing (int *ncol, int *nrow, struct lb_str *swname,
-                  struct lb_str *swvers);
+int view_landing (const int *ncol, const int *nrow, const struct lb_str *swname,
+                  const struct lb_str *swvers);
 
 #endif /* LB_UI_H */

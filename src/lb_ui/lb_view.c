@@ -78,38 +78,45 @@
 //         return 0;
 // };
 
-int view_landing(int *ncol, int *nrow, struct lb_str *swname,
-                 struct lb_str *swvers) {
-        // Doubling space, for nonvisible characters
-        int lsize = (*ncol) * (*nrow) * 2;
-        int defsize = 4;
-        struct lb_str *lines, *beg, *mid, *end;
-        if (str_from_charcount(&lines, &lsize) != 0) return -1;
-        if (str_from_charcount(&beg, &defsize) != 0) goto cleanlines;
-
-        if (str_from_chars(&mid, "This is a test!") != 0) goto cleanbeg;
-        if (fmt_newline(mid) != 0) goto cleanmid;
-        // if (str_from_charcount(&mid, &defsize) != 0) goto cleanbeg;
-        if (str_from_charcount(&end, &defsize) != 0) goto cleanmid;
-        if (str_cat_str(beg, swname) != 0) goto cleanend;
-        if (str_cat_str(end, swvers) != 0) goto cleanend;
+int view_landing(const int *ncol, const int *nrow, const struct lb_str *swname,
+                 const struct lb_str *swvers) {
+        // int defsize = 4;
+        //struct lb_str *lines, *beg, *mid, *end;
+        int x = 1;
+        int y = 1;
+        struct lb_str *lines, *tmp;
+        if (init_str_charcount(&lines, nrow) != 0) return -1;
+        if (init_str_charcount(&tmp, nrow) != 0) goto cleanlines;
+        int colcode = LB_COLOR_BLACK, isbright = LB_TRUE;
+        if (fmt_fg_color(tmp, &colcode, &isbright) != 0) goto cleantmp;
+        if (str_cat_chars(tmp, "status: offline") != 0) goto cleantmp;
+        colcode = LB_COLOR_RESET;
+        isbright = LB_FALSE;
+        if (fmt_fg_color(tmp, &colcode, &isbright) != 0) goto cleantmp;
+        if (fmt_move_cur(lines, &x, &y) != 0) goto cleantmp;
+        if (fmt_align_left(lines, swname, &x, &y) != 0) goto cleantmp;
+        // y += 1;
+        // if (fmt_align_center(lines, tmp, &x, &y) != 0) goto cleantmp;
+        // y += 1;
+        // if (fmt_align_right(lines, swvers, &x, &y) != 0) goto cleantmp;
+        // if (init_str_charcount(&beg, &defsize) != 0) goto cleanlines;
+        //if (init_str_chars(&mid, "This is a test!") != 0) goto cleanbeg;
+        // if (fmt_newline(mid) != 0) goto cleanmid;
+        // if (init_str_charcount(&mid, &defsize) != 0) goto cleanbeg;
+        // if (init_str_charcount(&end, &defsize) != 0) goto cleanmid;
+        // if (str_cat_str(beg, swname) != 0) goto cleanend;
+        // if (str_cat_str(end, swvers) != 0) goto cleanend;
         //if (format_line(lines, ncol, beg, mid, end) != 0) goto cleantmp;
-        if (str_cat_str(lines, mid) != 0) goto cleanend;
-
-        if (str_cat_str(lines, mid) != 0) goto cleanend;
-        if (str_cat_str(lines, mid) != 0) goto cleanend;
-        if (str_cat_str(lines, mid) != 0) goto cleanend;
-        if (str_cat_str(lines, mid) != 0) goto cleanend;
-        if (str_cat_str(lines, mid) != 0) goto cleanend;
-        if (str_cat_str(lines, mid) != 0) goto cleanend;
-        if (str_cat_str(lines, mid) != 0) goto cleanend;
-        if (str_cat_str(lines, mid) != 0) goto cleanend;
-        if (str_cat_str(lines, mid) != 0) goto cleanend;
-        if (str_cat_str(lines, mid) != 0) goto cleanend;
-
-        if (free_str(&end) != 0) goto cleanmid;
-        if (free_str(&mid) != 0) goto cleanbeg;
-        if (free_str(&beg) != 0) goto cleanlines;
+        // if (str_cat_str(lines, mid) != 0) goto cleanend;
+        // if (str_cat_str(lines, mid) != 0) goto cleanend;
+        // if (str_cat_str(lines, mid) != 0) goto cleanend;
+        // if (str_cat_str(lines, mid) != 0) goto cleanend;
+        // if (str_cat_str(lines, mid) != 0) goto cleanend;
+        // if (str_cat_str(lines, mid) != 0) goto cleanend;
+        // if (str_cat_str(lines, mid) != 0) goto cleanend;
+        // if (free_str(&end) != 0) goto cleanmid;
+        // if (free_str(&mid) != 0) goto cleanbeg;
+        // if (free_str(&beg) != 0) goto cleanlines;
         // if (format_line(lines, ncol, swname,
         //         LBF_FG_BR_BLACK "status: offline" LBF_FG_RESET, swvers) == -1)
         //         return -1;
@@ -129,15 +136,18 @@ int view_landing(int *ncol, int *nrow, struct lb_str *swname,
         // if (format_line(lines, ncol, NULL,
         //         LBF_FG_BR_BLACK "(notification area)" LBF_FG_RESET, NULL)
         //         == -1) return -1;
+        free_str(&tmp);
         if (tty_put_out(lines) != 0) goto cleanlines;
         free_str(&lines);
         return 0;
 cleanend:
-        free_str(&end);
+        // free_str(&end);
 cleanmid:
-        free_str(&mid);
+        // free_str(&mid);
 cleanbeg:
-        free_str(&beg);
+        // free_str(&beg);
+cleantmp:
+        free_str(&tmp);
 cleanlines:
         free_str(&lines);
         return -1;

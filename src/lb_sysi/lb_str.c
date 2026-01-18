@@ -22,8 +22,8 @@ int chars_ins_chars (char *dest, const int *di, const char *src, const int *si,
         if (dest == NULL) return -1;
         if (count_chars(&dsize, dest) != 0) return -1;
         if (dsize < 1) return -1;
-        while (i < dsize) {
-                dest[(*di) + i + *count] = dest[(*di) + i];
+        while ((*di) + i + (*count) <= dsize) {
+                dest[(*di) + i + (*count)] = dest[(*di) + i];
                 i++;
         };
         i = 0;
@@ -69,28 +69,54 @@ int valid_str (const struct lb_str *str) {
         return LB_TRUE;
 };
 
-int str_from_charcount (struct lb_str **dest, const int *charcount) {
-        if (*charcount < 1 || *charcount > LBF_MAX_STR_LEN) return -1;
+int init_str_str (struct lb_str **dest, const struct lb_str *src) {
+        if (!valid_str(src)) return -1;
+        int ssize;
+        if (count_str_chars(&ssize, src) != 0) return -1;
+        if (init_str_charcount(dest, &ssize) != 0) return -1;
+        (*dest)->chars = malloc(sizeof(src->chars));
+        if (!valid_str(*dest)) {
+                errno = ENOMEM;
+                return -1;
+        };
+        if (str_cat_str(*dest, src) != 0) goto cleandest;
+        return 0;
+cleandest:
+        free_str(dest);
+        return -1;
+};
+
+int init_str_charcount (struct lb_str **dest, const int *charcount) {
+        if (*charcount < 1 || *charcount > LBF_MAX_STR_LEN) {
+                errno = ERANGE;
+                return -1;
+        };
         *dest = malloc(sizeof(struct lb_str));
-        if (*dest == NULL) return -1;
-        (*dest)->chars = calloc(*charcount, sizeof(char));
+        if (*dest == NULL) goto memerr;
+        (*dest)->chars = malloc(*charcount * sizeof(char));
         if ((*dest)->chars == NULL) goto cleandest;
-        (*dest)->size = *charcount;
+        (*dest)->size = (*charcount) * sizeof(char);
         (*dest)->chars[0] = LBF_NULL;
-        if (!valid_str(*dest)) return -1;
+        if (!valid_str(*dest)) goto memerr;
         return 0;
 cleandest:
         free(*dest);
+        *dest = NULL;
+memerr:
+        errno = ENOMEM;
         return -1;
 };
 
 int str_ins_chars (struct lb_str *dest, const int *di, const char *src,
                    const int *si, const int *count) {
         if (!valid_str(dest)) return -1;
-        int ssize;
+        int ssize, dsize, newsize;
         if (count_chars(&ssize, src) != 0) return -1;
-        if (dest->size < ssize) {
-                while (dest->size < ssize) {
+        if (ssize == 1) return 0;
+        if (count_str_chars(&dsize, dest) != 0) return -1;
+        newsize = dsize + ssize - 1;
+        if (dest->size < newsize) {
+                while (dest->size < newsize) {
                         dest->size *= 2;
                         if (dest->size > LBF_MAX_STR_LEN) {
                                 dest->size = LBF_MAX_STR_LEN;
@@ -104,12 +130,12 @@ int str_ins_chars (struct lb_str *dest, const int *di, const char *src,
         return 0;
 };
 
-int str_from_chars (struct lb_str **dest, const char *src) {
+int init_str_chars (struct lb_str **dest, const char *src) {
         if (dest == NULL) return -1;
         const int i = 0;
         int count;
         if (count_chars(&count, src) != 0) return -1;
-        if (str_from_charcount(dest, &count) != 0) return -1;
+        if (init_str_charcount(dest, &count) != 0) return -1;
         if (str_ins_chars(*dest, &i, src, &i, &count) != 0) goto cleandest;
         return 0;
 cleandest:
@@ -155,6 +181,7 @@ int comp_str_str (int *dest, const struct lb_str *src_a,
 int str_ins_str (struct lb_str *dest, const int *di, const struct lb_str *src,
                  const int *si, const int *count) {
         if (!valid_str(dest) || !valid_str(src)) return -1;
+        if (src->chars[0] == '\0') return 0;
         return str_ins_chars(dest, di, src->chars, si, count);
 };
 
@@ -164,6 +191,15 @@ int str_cat_char (struct lb_str *dest, const char *src) {
         if (count_str_chars(&di, dest) != 0) return -1;
         di--;
         return str_ins_chars(dest, &di, src, &si, &amt);
+};
+
+int str_cat_chars (struct lb_str *dest, const char *src) {
+        int si = 0, di, scount;
+        if (count_str_chars(&di, dest) != 0) return -1;
+        di--;
+        if (count_chars(&scount, src) != 0) return -1;
+        if (str_ins_chars(dest, &di, src, &si, &scount) != 0) return -1;
+        return 0;
 };
 
 int str_cat_str (struct lb_str *dest, const struct lb_str *src) {
@@ -189,20 +225,21 @@ int str_reverse (struct lb_str *str) {
         return 0;
 };
 
-int str_from_int (struct lb_str **dest, const int *src) {
+int init_str_int (struct lb_str **dest, const int *src) {
+        if (src == NULL) return -1;
         if (*src == 0) {
-                if (str_from_chars(dest, "0") != 0) return -1;
+                if (init_str_chars(dest, "0") != 0) return -1;
                 return 0;
         };
         int size = LBF_NUMSEQ_LEN, n = *src, i = 0, si;
         const int amt = 1, isneg = n < 0 ? LB_TRUE : LB_FALSE;
         const char *nstr = LBF_NUMBERS, negch = LBF_MINUS, nulch = LBF_NULL;
-        if (str_from_charcount(dest, &size) != 0) return -1;
-        if (!valid_str(*dest) || src == NULL) return -1;
         if (isneg) {
                 size++;
                 n *= -1;
         };
+        if (init_str_charcount(dest, &size) != 0) return -1;
+        if (!valid_str(*dest)) return -1;
         while (n != 0) {
                 si = n % LBF_NUMBASE;
                 if (str_ins_chars(*dest, &i, nstr, &si, &amt) != 0)
@@ -213,7 +250,6 @@ int str_from_int (struct lb_str **dest, const int *src) {
         if (isneg) {
                 if (str_cat_char(*dest, &negch) != 0) goto cleandest;
         };
-        if (str_cat_char(*dest, &nulch) != 0) goto cleandest;
         if (str_reverse(*dest) != 0) goto cleandest;
         return 0;
 cleandest:
@@ -248,7 +284,7 @@ int str_del_all (struct lb_str *str) {
 int free_str (struct lb_str **dest) {
         if (dest == NULL) return -1;
         if (*dest != NULL) {
-                if ((*dest)->chars != NULL) free((*dest)->chars);
+                free((*dest)->chars);
                 free(*dest);
                 *dest = NULL;
         };

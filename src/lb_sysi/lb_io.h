@@ -7,25 +7,24 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <termios.h>
-#include <unistd.h>
 
 #include "lb_bool.h"
+#include "lb_fmt.h"
 #include "lb_str.h"
 
 struct lb_file;
 struct lb_tty_cfg;
 struct lb_kbevent {
         int code;
-        int is_press;
 };
 
-int file_init_tty_in (struct lb_file **dest);
-int file_init_tty_out (struct lb_file **dest);
-int file_put_str (struct lb_file *dest, const struct lb_str *str);
-int file_get_key (struct lb_kbevent *dest, const struct lb_file *source);
-int file_free (struct lb_file **dest);
-int tty_cfg_init (struct lb_tty_cfg **dest);
-int tty_cfg_free (struct lb_tty_cfg **dest);
+int init_file_stdin (struct lb_file **dest);
+int init_file_stdout (struct lb_file **dest);
+int file_put_clear (struct lb_file *dest);
+int file_put_str (struct lb_file *dest, const struct lb_str *src);
+int file_get_key (struct lb_kbevent *dest, const struct lb_file *src);
+int free_file (struct lb_file **dest);
+int init_tty_cfg (struct lb_tty_cfg **dest);
+int free_tty_cfg (struct lb_tty_cfg **dest);
 
 #endif /* LB_IO_H */

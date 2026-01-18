@@ -3,12 +3,13 @@
 const struct lb_str LBF_CLEAR = {.chars = "\033[2J", .size = 5};
 const struct lb_str LBF_RESET = {.chars = "\033[2J\033[1;1H", .size = 11};
 const struct lb_str LBF_NEWLINE = {.chars = "\012", .size = 2};
-const struct lb_str LBF_FG_BR_BLACK = {.chars = "\033[90m", .size = 6};
-const struct lb_str LBF_FG_RESET = {.chars = "\033[0m", .size = 5};
+// const struct lb_str LBF_NEWLINE = {.chars = "N", .size = 2};
+// const struct lb_str LBF_FG_RESET = {.chars = "\033[0m", .size = 5};
 const struct lb_str LBF_ESCAPE = {.chars = "\033", .size = 2};
-const struct lb_str LBF_OBS = {.chars = "[", .size = 2};
+const struct lb_str LBF_OSB = {.chars = "[", .size = 2};
 const struct lb_str LBF_SEMICOLON = {.chars = ";", .size = 2};
 const struct lb_str LBF_ES_MOVE = {.chars = "H", .size = 2};
+const struct lb_str LBF_ES_GRAPHICS = {.chars = "m", .size = 2};
 
 // #define LBF_ESCAPE '\033'
 // #define LBF_OSB '['
@@ -61,27 +62,31 @@ const struct lb_str LBF_ES_MOVE = {.chars = "H", .size = 2};
 // #define LBF_FG_RESET "\033[0m"
 
 int is_seq_end (int *dest, const char *src) {
-        if (*src == 'H') *dest = LB_TRUE;
-        if (*src == 'J') *dest = LB_TRUE;
-        if (*src == 'M') *dest = LB_TRUE;
-        // switch (*src) {
-        //         case *(LBF_ES_MOVE.chars):
-        //                 *dest = LB_TRUE;
-        //                 return 0;
-        // };
-        *dest = LB_FALSE;
+        switch (*src) {
+                case 'H': case 'J': case 'm':
+                        *dest = LB_TRUE;
+                        break;
+                default:
+                        *dest = LB_FALSE;
+                        break;
+        };
         return 0;
 };
 
 int fmt_int (struct lb_str *dest, const int *src) {
         struct lb_str *istr;
-        if (str_from_int(&istr, src) != 0) goto cleanstr;
+        if (init_str_int(&istr, src) != 0) return -1;
         if (str_cat_str(dest, istr) != 0) goto cleanstr;
-        free_str(&istr);
+        if (free_str(&istr) != 0) return -1;
         return 0;
 cleanstr:
         free_str(&istr);
         return -1;
+};
+
+int fmt_clear (struct lb_str *dest) {
+        if (str_cat_str(dest, &LBF_CLEAR) != 0) return -1;
+        return 0;
 };
 
 int fmt_reset (struct lb_str *dest) {
@@ -96,7 +101,7 @@ int fmt_newline (struct lb_str *dest) {
 
 int fmt_es_pre (struct lb_str *dest) {
         if (str_cat_str(dest, &LBF_ESCAPE) != 0) return -1;
-        if (str_cat_str(dest, &LBF_OBS) != 0) return -1;
+        if (str_cat_str(dest, &LBF_OSB) != 0) return -1;
         return 0;
 };
 
@@ -107,6 +112,48 @@ int fmt_move_cur (struct lb_str *dest, const int *x, const int *y) {
         if (fmt_int(dest, x) != 0) return -1;
         if (str_cat_str(dest, &LBF_ES_MOVE) != 0) return -1;
         return 0;
+};
+
+int fmt_fg_color (struct lb_str *dest, const int *lbcolor, const int *isbr) {
+        const int colbase = 30;
+        int colcode = colbase + *lbcolor;
+        if (*isbr) colcode += 60;
+        if (fmt_es_pre(dest) != 0) return -1;
+        if (fmt_int(dest, &colcode) != 0) return -1;
+        if (str_cat_str(dest, &LBF_ES_GRAPHICS) != 0) return -1;
+        return 0;
+};
+
+int fmt_align_left(struct lb_str *dest, const struct lb_str *src, const int *x, const int *y) {
+        int ssize, newx = *x, delamt, i = 0;
+        struct lb_str *scpy;
+        if (init_str_str(&scpy, src) != 0) return -1;
+        if (count_str_vischars(&ssize, scpy) != 0) goto cleanscpy;
+        if (newx < 1) {
+                delamt = (-newx) + 1;
+                if (str_del_charcount(scpy, &i, &delamt) != 0) goto cleanscpy;
+        };
+        if (fmt_move_cur(dest, x, y) != 0) goto cleanscpy;
+        if (str_cat_str(dest, scpy) != 0) goto cleanscpy;
+        free_str(&scpy);
+        return 0;
+cleanscpy:
+        free_str(&scpy);
+        return -1;
+};
+
+int fmt_align_center(struct lb_str *dest, const struct lb_str *src, const int *x, const int *y) {
+        int ssize;
+        if (count_str_vischars(&ssize, src) != 0) return -1;
+        const int newx = *x - (ssize/2);
+        return fmt_align_left(dest, src, &newx, y);
+};
+
+int fmt_align_right(struct lb_str *dest, const struct lb_str *src, const int *x, const int *y) {
+        int ssize;
+        if (count_str_vischars(&ssize, src) != 0) return -1;
+        const int newx = *x - ssize;
+        return fmt_align_left(dest, src, &newx, y);
 };
 
 int count_str_vischars (int *dest, const struct lb_str *src) {
@@ -120,7 +167,7 @@ int count_str_vischars (int *dest, const struct lb_str *src) {
                 } else {
                         if (src->chars[i] == LBF_ESCAPE.chars[0]) {
                                 isesc = LB_TRUE;
-                        } else {
+                        } else if (src->chars[i] != '\n') {
                                 (*dest)++;
                         };
                 };
@@ -128,6 +175,7 @@ int count_str_vischars (int *dest, const struct lb_str *src) {
                         errno = ERANGE;
                         return -1;
                 };
+                i++;
         };
         return 0;
 };
