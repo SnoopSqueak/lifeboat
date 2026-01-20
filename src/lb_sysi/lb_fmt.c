@@ -89,11 +89,21 @@ int fmt_move_cur (struct lb_str *dest, const int *x, const int *y) {
 };
 
 int fmt_align_left(struct lb_str *dest, const struct lb_str *src, const int *x, const int *y) {
-        int newx = *x, delamt, i = 0;
-        // TODO: cut off text that starts or goes offscreen
+        int newx = *x, i = 0, ssize;
+        struct lb_str *scpy;
+        if (init_str_str(&scpy, src) != 0) return -1;
+        if (*x < 1) {
+                i = 1 - (*x);
+                if (str_del_charcount(scpy, &i, &i) != 0) goto cleanscpy;
+        };
+        if (count_str_vischars(&ssize, scpy) != 0) goto cleanscpy;
+        // TODO: cut off text that goes offscreen? pass in ncol?
         if (fmt_move_cur(dest, &newx, y) != 0) return -1;
         if (str_cat_str(dest, src) != 0) return -1;
         return 0;
+cleanscpy:
+        free_str(&scpy);
+        return -1;
 };
 
 int fmt_align_center(struct lb_str *dest, const struct lb_str *src, const int *x, const int *y) {
