@@ -42,25 +42,6 @@ const struct lb_str LBF_ES_GRAPHICS = {.chars = "m", .size = 2};
 
 // #define LBF_DELETE '\177'
 
-// Foreground colors
-// #define LBF_FG_BLACK "\033[30m"
-// #define LBF_FG_RED "\033[31m"
-// #define LBF_FG_GREEN "\033[32m"
-// #define LBF_FG_YELLOW "\033[33m"
-// #define LBF_FG_BLUE "\033[34m"
-// #define LBF_FG_MAGENTA "\033[35m"
-// #define LBF_FG_CYAN "\033[36m"
-// #define LBF_FG_WHITE "\033[37m"
-// #define LBF_FG_BR_BLACK "\033[90m"
-// #define LBF_FG_BR_RED "\033[91m"
-// #define LBF_FG_BR_GREEN "\033[92m"
-// #define LBF_FG_BR_YELLOW "\033[93m"
-// #define LBF_FG_BR_BLUE "\033[94m"
-// #define LBF_FG_BR_MAGENTA "\033[95m"
-// #define LBF_FG_BR_CYAN "\033[96m"
-// #define LBF_FG_BR_WHITE "\033[97m"
-// #define LBF_FG_RESET "\033[0m"
-
 int is_seq_end (int *dest, const char *src) {
         switch (*src) {
                 case 'H': case 'J': case 'm':
@@ -114,32 +95,12 @@ int fmt_move_cur (struct lb_str *dest, const int *x, const int *y) {
         return 0;
 };
 
-int fmt_fg_color (struct lb_str *dest, const int *lbcolor, const int *isbr) {
-        const int colbase = 30;
-        int colcode = colbase + *lbcolor;
-        if (*isbr) colcode += 60;
-        if (fmt_es_pre(dest) != 0) return -1;
-        if (fmt_int(dest, &colcode) != 0) return -1;
-        if (str_cat_str(dest, &LBF_ES_GRAPHICS) != 0) return -1;
-        return 0;
-};
-
 int fmt_align_left(struct lb_str *dest, const struct lb_str *src, const int *x, const int *y) {
-        int ssize, newx = *x, delamt, i = 0;
-        struct lb_str *scpy;
-        if (init_str_str(&scpy, src) != 0) return -1;
-        if (count_str_vischars(&ssize, scpy) != 0) goto cleanscpy;
-        if (newx < 1) {
-                delamt = (-newx) + 1;
-                if (str_del_charcount(scpy, &i, &delamt) != 0) goto cleanscpy;
-        };
-        if (fmt_move_cur(dest, x, y) != 0) goto cleanscpy;
-        if (str_cat_str(dest, scpy) != 0) goto cleanscpy;
-        free_str(&scpy);
+        int newx = *x, delamt, i = 0;
+        // TODO: cut off text that starts or goes offscreen
+        if (fmt_move_cur(dest, &newx, y) != 0) return -1;
+        if (str_cat_str(dest, src) != 0) return -1;
         return 0;
-cleanscpy:
-        free_str(&scpy);
-        return -1;
 };
 
 int fmt_align_center(struct lb_str *dest, const struct lb_str *src, const int *x, const int *y) {
@@ -159,7 +120,7 @@ int fmt_align_right(struct lb_str *dest, const struct lb_str *src, const int *x,
 int count_str_vischars (int *dest, const struct lb_str *src) {
         if (src == NULL || dest == NULL) return -1;
         int i = 0, isesc = LB_FALSE, isend;
-        *dest = 1;
+        *dest = 0;
         while (src->chars[i] != '\0') {
                 if (isesc) {
                         if (is_seq_end(&isend, &(src->chars[i])) != 0) return -1;
@@ -171,11 +132,11 @@ int count_str_vischars (int *dest, const struct lb_str *src) {
                                 (*dest)++;
                         };
                 };
+                i++;
                 if (i >= LBF_MAX_STR_LEN - 1) {
                         errno = ERANGE;
                         return -1;
                 };
-                i++;
         };
         return 0;
 };

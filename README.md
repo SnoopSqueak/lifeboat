@@ -28,14 +28,14 @@ Readability:
 - Aim for concise variable and function names.
 
 Performance:
-- Pass by reference to reduce value duplication.
+- Pass by reference to reduce value duplication. Use const to protect values.
 - Avoid redundant memory allocation. Make careful use of pointers.
 - Aim for responsiveness without wasting many cycles.
 
 Clarity:
 - Avoid global variables.
 - Avoid unnecessary use of typedef.
-- Avoid enums.
+- Avoid enums. Define ints instead.
 
 This project is using [Munit](https://nemequ.github.io/munit/#) by [nemequ](https://github.com/nemequ) for testing.
 

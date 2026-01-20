@@ -40,8 +40,8 @@ int str_ins_str (struct lb_str *dest, const int *di, const struct lb_str *src,
 int str_cat_char (struct lb_str *dest, const char *src);
 int str_cat_chars (struct lb_str *dest, const char *src);
 int str_cat_str (struct lb_str *dest, const struct lb_str *src);
-int str_del_charcount (struct lb_str *str, const int *i, const int *count);
-int str_del_all (struct lb_str *str);
+int str_del_charcount (struct lb_str *dest, const int *i, const int *count);
+int str_del_all (struct lb_str *dest);
 int free_str (struct lb_str **dest);
 
 #endif /* LB_STRING_H */

@@ -3,13 +3,15 @@
 
 #include "munit.h"
 #include "lb_sysi/lb_fmt.h"
+#include "lb_sysi/lb_str.h"
 
-static MunitResult test_fmt_tba (const MunitParameter params[], void * data) {
+static MunitResult test_fmt_tba (const MunitParameter params[], void *data) {
         return MUNIT_SKIP;
 };
 
 static MunitTest lb_fmt_tests[] = {
-        {(char*) "/tba", test_fmt_tba, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+        {(char*) "/tba", test_fmt_tba, NULL, NULL,
+                MUNIT_TEST_OPTION_NONE, NULL},
         {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}
 };
 

@@ -86,15 +86,17 @@ int view_landing(const int *ncol, const int *nrow, const struct lb_str *swname,
         int y = 1;
         struct lb_str *lines, *tmp;
         if (init_str_charcount(&lines, nrow) != 0) return -1;
-        if (init_str_charcount(&tmp, nrow) != 0) goto cleanlines;
-        int colcode = LB_COLOR_BLACK, isbright = LB_TRUE;
-        if (fmt_fg_color(tmp, &colcode, &isbright) != 0) goto cleantmp;
-        if (str_cat_chars(tmp, "status: offline") != 0) goto cleantmp;
-        colcode = LB_COLOR_RESET;
-        isbright = LB_FALSE;
-        if (fmt_fg_color(tmp, &colcode, &isbright) != 0) goto cleantmp;
-        if (fmt_move_cur(lines, &x, &y) != 0) goto cleantmp;
+        if (init_str_charcount(&tmp, nrow) != 0) return -1;
         if (fmt_align_left(lines, swname, &x, &y) != 0) goto cleantmp;
+        // int colcode = LB_COLOR_BLACK, isbright = LB_TRUE;
+        // if (fmt_fg_color(tmp, &colcode, &isbright) != 0) goto cleantmp;
+        x = 39;
+        if (str_cat_chars(tmp, "status: offline") != 0) goto cleantmp;
+        if (fmt_align_left(lines, tmp, &x, &y) != 0) goto cleantmp;
+        // colcode = LB_COLOR_RESET;
+        // isbright = LB_FALSE;
+        // if (fmt_fg_color(lines, &colcode, &isbright) != 0) goto cleantmp;
+
         // y += 1;
         // if (fmt_align_center(lines, tmp, &x, &y) != 0) goto cleantmp;
         // y += 1;
@@ -140,11 +142,11 @@ int view_landing(const int *ncol, const int *nrow, const struct lb_str *swname,
         if (tty_put_out(lines) != 0) goto cleanlines;
         free_str(&lines);
         return 0;
-cleanend:
+// cleanend:
         // free_str(&end);
-cleanmid:
+// cleanmid:
         // free_str(&mid);
-cleanbeg:
+// cleanbeg:
         // free_str(&beg);
 cleantmp:
         free_str(&tmp);

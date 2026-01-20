@@ -14,6 +14,8 @@
 #define LB_COLOR_CYAN 6
 #define LB_COLOR_WHITE 7
 
+struct lb_fstr;
+
 int fmt_clear (struct lb_str *dest);
 int fmt_reset (struct lb_str *dest);
 int fmt_newline (struct lb_str *dest);
@@ -23,5 +25,6 @@ int fmt_align_left(struct lb_str *dest, const struct lb_str *src, const int *x, 
 int fmt_align_center(struct lb_str *dest, const struct lb_str *src, const int *x, const int *y);
 int fmt_align_right(struct lb_str *dest, const struct lb_str *src, const int *x, const int *y);
 int count_str_vischars (int *dest, const struct lb_str *src);
+int str_del_vischars (struct lb_str *dest, const int *i, const int *count);
 
 #endif /* LB_FMT_H */

@@ -1,3 +1,10 @@
 Future TODO:
 Print a nice error message if anything necessary is not supported?
 https://en.cppreference.com/w/c/preprocessor/replace.html
+
+managing ansi escape sequences in char arrays is too cumbersome
+introduce fstr struct for formatted strings?
+        each contains a pointer to next string (or null)
+        top level struct is special "control" node? only head can add/remove?
+                that way head can keep an accurate count of its children/contents
+

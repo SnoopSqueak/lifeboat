@@ -257,27 +257,27 @@ cleandest:
         return -1;
 };
 
-int str_del_charcount (struct lb_str *str, const int *i, const int *count) {
+int str_del_charcount (struct lb_str *dest, const int *i, const int *count) {
         if (*count == 0) return 0;
-        if (*i < 0 || !valid_str(str)) return -1;
+        if (*i < 0 || !valid_str(dest)) return -1;
         int counter = 0, size;
-        if (count_str_chars(&size, str) != 0) return -1;
+        if (count_str_chars(&size, dest) != 0) return -1;
         if (*i + *count >= size) {
                 errno = ERANGE;
                 return -1;
         };
         char c;
         do {
-                c = str->chars[(*i) + (*count) + counter];
-                str->chars[(*i) + counter] = c;
+                c = dest->chars[(*i) + (*count) + counter];
+                dest->chars[(*i) + counter] = c;
                 counter++;
         } while (c != LBF_NULL);
         return 0;
 };
 
-int str_del_all (struct lb_str *str) {
-        if (!valid_str(str)) return -1;
-        str->chars[0] = LBF_NULL;
+int str_del_all (struct lb_str *dest) {
+        if (!valid_str(dest)) return -1;
+        dest->chars[0] = LBF_NULL;
         return 0;
 };
 
