@@ -3,24 +3,17 @@
 const struct lb_str LBF_CLEAR = {.chars = "\033[2J", .size = 5};
 const struct lb_str LBF_RESET = {.chars = "\033[2J\033[1;1H", .size = 11};
 const struct lb_str LBF_NEWLINE = {.chars = "\012", .size = 2};
-// const struct lb_str LBF_NEWLINE = {.chars = "N", .size = 2};
-// const struct lb_str LBF_FG_RESET = {.chars = "\033[0m", .size = 5};
 const struct lb_str LBF_ESCAPE = {.chars = "\033", .size = 2};
 const struct lb_str LBF_OSB = {.chars = "[", .size = 2};
 const struct lb_str LBF_SEMICOLON = {.chars = ";", .size = 2};
 const struct lb_str LBF_ES_MOVE = {.chars = "H", .size = 2};
 const struct lb_str LBF_ES_GRAPHICS = {.chars = "m", .size = 2};
 
-// #define LBF_ESCAPE '\033'
-// #define LBF_OSB '['
-// #define LBF_SEMICOLON ';'
-
 // // Escape Sequence end codes
 // #define LBF_ES_UP 'A'
 // #define LBF_ES_DOWN 'B'
 // #define LBF_ES_LEFT 'C'
 // #define LBF_ES_RIGHT 'D'
-// #define LBF_ES_MOVE 'H'
 // #define LBF_ES_CLEAR 'J'
 // #define LBF_ES_GRAPHICS 'm'
 // #define LBF_ES_ALIGN_LEFT 'L'
