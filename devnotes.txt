@@ -8,3 +8,4 @@ introduce fstr struct for formatted strings?
         top level struct is special "control" node? only head can add/remove?
                 that way head can keep an accurate count of its children/contents
 
+blah blah <green>text here</green> not green anymore?
