@@ -4,9 +4,8 @@
 
 void lb_exit (int exit_status) {
         if (tty_free() != 0) {
-                // system("reset");
-                // printf("Failed to free tty. Used reset instead.\n");
-                printf("Failed to free tty.\n");
+                system("reset");
+                printf("Failed to free tty. Used reset instead.\n");
         };
         if (exit_status == EXIT_FAILURE) {
                 printf("Unexpected failure. %s\n", strerror(errno));

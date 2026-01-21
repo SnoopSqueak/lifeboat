@@ -1,6 +1,6 @@
 Future TODO:
-Print a nice error message if anything necessary is not supported?
-https://en.cppreference.com/w/c/preprocessor/replace.html
+        Print a nice error message if anything necessary is not supported?
+        https://en.cppreference.com/w/c/preprocessor/replace.html
 
 managing ansi escape sequences in char arrays is too cumbersome
 introduce fstr struct for formatted strings?
@@ -9,3 +9,23 @@ introduce fstr struct for formatted strings?
                 that way head can keep an accurate count of its children/contents
 
 blah blah <green>text here</green> not green anymore?
+
+commands:
+        /host, /serve
+                cmd port
+                open boat to other boats
+                (cannot host while joining)
+        /join, /connect
+                cmd address
+                join other open boat
+                (cannot join while hosting)
+        /leave, /disconnect, /close
+                cmd
+                close open connections
+        /accept, /allow, /yes
+                cmd conid?
+        /reject, /refuse, /no
+                cmd conid
+        /exit, /quit
+                cmd
+                close connections and application
