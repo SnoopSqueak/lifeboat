@@ -61,21 +61,12 @@ int tty_put_out (const struct lb_str *src) {
 };
 
 int tty_get_in (char *dest) {
-        struct lb_kbevent *keybuf = malloc(sizeof(struct lb_kbevent));
-        if (file_get_key(keybuf, fin) != 0) goto cleankeybuf;
-        printf("\nRead: '%3d'.\n", keybuf->code);
-        free(keybuf);
+        if (file_get_key(dest, fin) != 0) return -1;
         return 0;
-cleankeybuf:
-        free(keybuf);
-        return -1;
 };
 
 int tty_free () {
         int result = 0;
-        // for (int i = 0; i < nrow; i++) {
-        // if (fmt_newline(strout) != 0) return -1;
-        // };
         if (tty_draw() != 0) result = -1;
         if (free_tty_cfg(&cfg) != 0) result = -1;
         if (free_file(&fin) != 0) result = -1;

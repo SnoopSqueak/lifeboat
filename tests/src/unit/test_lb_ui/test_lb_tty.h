@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 
-static const char * outpath = "lb_testfile.txt";
+static const char *outpath = "lb_testfile.txt";
 
 static MunitResult test_init_tty (const MunitParameter params[], void * data) {
         return MUNIT_SKIP;

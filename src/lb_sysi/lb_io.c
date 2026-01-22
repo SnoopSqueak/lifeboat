@@ -53,22 +53,9 @@ int file_put_str (struct lb_file *dest, const struct lb_str *src) {
         return 0;
 };
 
-int file_get_key (struct lb_kbevent *dest, const struct lb_file *src) {
-        char *keybuf = calloc(18, sizeof(char));
-        int i, n;
-        while (feof(src->file) == 0) {
-                n = read(src->fileno, keybuf, sizeof(keybuf));
-                if (n != 1 && n != 3) goto cleankeybuf;
-                i = 0;
-                while (i < n) {
-                        dest->code = keybuf[i];
-                };
-        };
-        free(keybuf);
+int file_get_key (char *dest, const struct lb_file *src) {
+        read(src->fileno, dest, sizeof(dest));
         return 0;
-cleankeybuf:
-        free(keybuf);
-        return -1;
 };
 
 int free_file (struct lb_file **dest) {
