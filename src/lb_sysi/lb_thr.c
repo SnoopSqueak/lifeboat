@@ -61,9 +61,22 @@ cleanmtx:
         return -1;
 };
 
-int lb_raise (int *lbtid, int *sig) {
-        return -1;
+int thr_sleep (const unsigned int *ms) {
+        struct timespec start, end;
+        timespec_get(&start, TIME_UTC);
+        unsigned int t;
+        do {
+                thrd_yield();
+                timespec_get(&end, TIME_UTC);
+                t = (end.tv_sec - start.tv_sec) * 1000;
+                t += (end.tv_nsec - start.tv_nsec)/1000000;
+        } while (t < *ms);
+        return 0;
 };
+
+// int lb_raise (int *lbtid, int *sig) {
+//         return -1;
+// };
 
 int free_thr (const int *lbtid) {
         if (mtx_lock(&lbtmtx) != thrd_success) return -1;

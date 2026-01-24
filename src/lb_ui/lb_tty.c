@@ -47,6 +47,7 @@ int tty_draw () {
         if (fmt_move_cur(inslice, &col, &nrow) != 0) goto cleanins;
         if (file_put_str(fout, inslice) != 0) goto cleanins;
         free_str(&inslice);
+        if (file_flush(fout) != 0) return -1;
         return 0;
 cleanins:
         free_str(&inslice);
@@ -60,14 +61,21 @@ int tty_put_out (const struct lb_str *src) {
         return 0;
 };
 
-int tty_get_in (char *dest) {
-        if (file_get_key(dest, fin) != 0) return -1;
+int tty_get_in (struct lb_str *dest) {
+        char c;
+        if (str_del_all(strin) != 0) return -1;
+        while (LB_TRUE) {
+                if (file_get_key(&c, fin) != 0) return -1;
+                if (c == '\n') break;
+                if (str_cat_char(strin, &c) != 0) return -1;
+        };
+        if (str_cat_str(dest, strin) != 0) return -1;
         return 0;
 };
 
 int tty_free () {
         int result = 0;
-        if (tty_draw() != 0) result = -1;
+        // if (tty_draw() != 0) result = -1;
         if (free_tty_cfg(&cfg) != 0) result = -1;
         if (free_file(&fin) != 0) result = -1;
         if (free_file(&fout) != 0) result = -1;

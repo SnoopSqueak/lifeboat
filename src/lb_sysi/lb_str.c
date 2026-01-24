@@ -86,7 +86,7 @@ cleandest:
         return -1;
 };
 
-int init_str_charcount (struct lb_str **dest, const int *charcount) {
+int init_str_charcount (struct lb_str **dest, const unsigned int *charcount) {
         if (*charcount < 1 || *charcount > LBF_MAX_STR_LEN) {
                 errno = ERANGE;
                 return -1;
@@ -160,22 +160,25 @@ int char_from_str (char *dest, const struct lb_str *src, const int *i) {
         return 0;
 };
 
-int comp_str_str (int *dest, const struct lb_str *src_a,
-                  const struct lb_str *src_b) {
-        if (!valid_str(src_a) || !valid_str(src_b)) return -1;
+int comp_chars_chars (int *dest, const char *src_a, const char *src_b) {
         int i = 0;
         char a, b;
         do {
-                a = src_a->chars[i];
-                b = src_b->chars[i];
+                a = src_a[i];
+                b = src_b[i];
                 if (a != b) {
-                        *dest = 0;
+                        *dest = LB_FALSE;
                         return 0;
                 };
                 i++;
         } while (a != LBF_NULL && b != LBF_NULL);
-        *dest = 1;
+        *dest = LB_TRUE;
         return 0;
+};
+
+int comp_str_str (int *dest, const struct lb_str *src_a,
+                  const struct lb_str *src_b) {
+        return comp_chars_chars(dest, src_a->chars, src_b->chars);
 };
 
 int str_ins_str (struct lb_str *dest, const int *di, const struct lb_str *src,

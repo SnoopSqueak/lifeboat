@@ -8,6 +8,7 @@
 
 int init_lbthreads ();
 int init_thr (unsigned int *dest, const int (*func) (void));
+int thr_sleep (const unsigned int *ms);
 // int lb_raise (int *lbtid, int *sig);
 int free_thr (const int *lbtid);
 

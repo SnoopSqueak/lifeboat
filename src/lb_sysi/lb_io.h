@@ -20,6 +20,7 @@ int init_file_stdout (struct lb_file **dest);
 int file_put_clear (struct lb_file *dest);
 int file_put_str (struct lb_file *dest, const struct lb_str *src);
 int file_get_key (char *dest, const struct lb_file *src);
+int file_flush (struct lb_file *dest);
 int free_file (struct lb_file **dest);
 int init_tty_cfg (struct lb_tty_cfg **dest);
 int free_tty_cfg (struct lb_tty_cfg **dest);

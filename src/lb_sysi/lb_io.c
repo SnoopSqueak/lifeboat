@@ -58,6 +58,11 @@ int file_get_key (char *dest, const struct lb_file *src) {
         return 0;
 };
 
+int file_flush (struct lb_file *dest) {
+        if (fflush(dest->file) != 0) return -1;
+        return 0;
+};
+
 int free_file (struct lb_file **dest) {
         if (*dest == NULL) return -1;
         free(*dest);

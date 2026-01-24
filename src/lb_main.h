@@ -2,6 +2,7 @@
 #define LB_MAIN_H
 
 #include <errno.h>
+#include <threads.h>
 #include <stdio.h>
 #include <string.h>
 
